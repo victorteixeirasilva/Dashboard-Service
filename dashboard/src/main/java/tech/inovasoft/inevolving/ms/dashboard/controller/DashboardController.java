@@ -31,11 +31,9 @@ public class DashboardController {
     @Async("asyncExecutor")
     @GetMapping("/{idUser}")
     public CompletableFuture<ResponseEntity<ResponseDashbordDTO>> getDashboard(UUID idUser) {
-        return CompletableFuture.completedFuture(
-                ResponseEntity.ok(
-                        dashboardService.getDashboard(idUser)
-                )
-        );
+        return CompletableFuture.completedFuture(ResponseEntity.ok(
+                dashboardService.getDashboard(idUser)
+        ));
     }
 
 }
