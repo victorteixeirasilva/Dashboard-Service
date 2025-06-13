@@ -10,7 +10,7 @@ import tech.inovasoft.inevolving.ms.dashboard.service.client.category.dto.Object
 import java.util.UUID;
 
 @FeignClient(
-        name = "objectives-service",
+        name = "categories-service",
         url = "http://localhost:8081/ms/categories"
 )
 public interface CategoryServiceClient {
@@ -21,7 +21,6 @@ public interface CategoryServiceClient {
             @PathVariable("idUser") UUID idUser
     );
 
-    //TODO: Desenvolver Teste de Integração.
     @GetMapping("/{idUser}/{idCategory}")
     ResponseEntity<ObjectivesByCategoryDTO> getObjectivesByCategory(
             @PathVariable("idUser") UUID idUser,
