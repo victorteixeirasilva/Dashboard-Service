@@ -1,5 +1,21 @@
 package tech.inovasoft.inevolving.ms.dashboard.service.client.task;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import tech.inovasoft.inevolving.ms.dashboard.service.client.task.dto.Task;
+
+import java.sql.Date;
+import java.util.List;
+import java.util.UUID;
+
 public interface TaskServiceClient { //TODO: Desenvolver Teste de Integração.
-    // TODO: Desenvolver assinatura dos end-points a serem consumidos
+
+    @GetMapping("/{idUser}/{idObjective}/{startDate}/{endDate}")
+    ResponseEntity<List<Task>> getTasksInDateRangeByObjectiveId(
+            @PathVariable UUID idUser,
+            @PathVariable UUID idObjective,
+            @PathVariable Date startDate,
+            @PathVariable Date endDate
+    );
 }
