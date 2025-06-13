@@ -13,7 +13,7 @@ import java.util.UUID;
         name = "objectives-service",
         url = "http://localhost:8081/ms/objectives"
 )
-public interface ObjectiveServiceClient { //TODO: Desenvolver Teste de Integração.
+public interface ObjectiveServiceClient {
 
     @GetMapping("/{idObjective}/{idUser}")
     ResponseEntity<Objective> getObjectiveById(

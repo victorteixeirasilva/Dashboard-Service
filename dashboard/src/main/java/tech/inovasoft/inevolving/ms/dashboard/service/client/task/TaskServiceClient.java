@@ -1,5 +1,6 @@
 package tech.inovasoft.inevolving.ms.dashboard.service.client.task;
 
+import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -9,6 +10,10 @@ import java.sql.Date;
 import java.util.List;
 import java.util.UUID;
 
+@FeignClient(
+        name = "task-service",
+        url = "http://localhost:8085/ms/tasks"
+)
 public interface TaskServiceClient { //TODO: Desenvolver Teste de Integração.
 
     @GetMapping("/{idUser}/{idObjective}/{startDate}/{endDate}")
