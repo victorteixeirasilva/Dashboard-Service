@@ -15,7 +15,6 @@ import java.util.UUID;
 )
 public interface CategoryServiceClient {
 
-    //TODO: Desenvolver Teste de Integração.
     @GetMapping("/{idUser}")
     ResponseEntity<CategoriesDTO> getCategories(
             @PathVariable("idUser") UUID idUser
