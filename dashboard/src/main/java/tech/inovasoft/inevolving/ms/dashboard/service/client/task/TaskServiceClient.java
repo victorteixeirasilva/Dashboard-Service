@@ -14,7 +14,7 @@ import java.util.UUID;
         name = "task-service",
         url = "http://localhost:8085/ms/tasks"
 )
-public interface TaskServiceClient { //TODO: Desenvolver Teste de Integração.
+public interface TaskServiceClient {
 
     @GetMapping("/{idUser}/{idObjective}/{startDate}/{endDate}")
     ResponseEntity<List<Task>> getTasksInDateRangeByObjectiveId(
