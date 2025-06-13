@@ -7,14 +7,13 @@ import tech.inovasoft.inevolving.ms.dashboard.service.client.objective.dto.Objec
 
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 @FeignClient(
         name = "objectives-service",
         url = "http://localhost:8081/ms/objectives"
 )
 public interface ObjectiveServiceClient {
-    // TODO:
+
     ResponseEntity<Objective> getObjectiveById(
             @PathVariable UUID idObjective,
             @PathVariable UUID idUser
