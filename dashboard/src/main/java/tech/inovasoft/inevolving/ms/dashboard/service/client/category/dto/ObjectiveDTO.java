@@ -1,9 +1,9 @@
-package tech.inovasoft.inevolving.ms.dashboard.service.client.objective.dto;
+package tech.inovasoft.inevolving.ms.dashboard.service.client.category.dto;
 
 import java.sql.Date;
 import java.util.UUID;
 
-public record Objective(
+public record ObjectiveDTO(
         UUID id,
         String nameObjective,
         String descriptionObjective,

@@ -8,4 +8,3 @@ public record CategoriesDTO(
         List<CategoryDTO> categories
 ) {
 }
-

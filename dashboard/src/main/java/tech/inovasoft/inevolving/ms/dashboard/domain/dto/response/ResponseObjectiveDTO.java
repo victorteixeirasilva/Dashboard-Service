@@ -1,7 +1,6 @@
 package tech.inovasoft.inevolving.ms.dashboard.domain.dto.response;
 
 import java.sql.Date;
-import java.util.List;
 import java.util.UUID;
 
 public record ResponseObjectiveDTO(

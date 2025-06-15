@@ -3,7 +3,7 @@ package tech.inovasoft.inevolving.ms.dashboard.service.client.task.dto;
 import java.sql.Date;
 import java.util.UUID;
 
-public record Task(
+public record TaskDTO(
         UUID id,
         String nameTask,
         String descriptionTask,
