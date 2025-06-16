@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import tech.inovasoft.inevolving.ms.dashboard.domain.dto.response.ResponseDashbordDTO;
@@ -31,7 +32,7 @@ public class DashboardController {
     )
     @Async("asyncExecutor")
     @GetMapping("/{idUser}")
-    public CompletableFuture<ResponseEntity<ResponseDashbordDTO>> getDashboard(UUID idUser) throws ExternalServiceErrorException {
+    public CompletableFuture<ResponseEntity<ResponseDashbordDTO>> getDashboard(@PathVariable UUID idUser) throws ExternalServiceErrorException {
         return CompletableFuture.completedFuture(ResponseEntity.ok(
                 dashboardService.getDashboard(idUser)
         ));
