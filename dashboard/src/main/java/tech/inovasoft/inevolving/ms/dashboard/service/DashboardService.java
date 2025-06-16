@@ -22,6 +22,12 @@ public class DashboardService {
 
     private TaskServiceClient taskServiceClient;
 
+    /**
+     * @desciprion - Analisa as tarefas de um objetivo. | Analyze the tasks of a goal.
+     * @param idUser - ID do usuário. | User ID
+     * @param idObjective - ID do objetivo. | Objective ID
+     * @return - Objeto com informações sobre as tarefas. | Object with task information
+     */
     public ObjectiveTaskAnalysisDTO analysisTheObjectiveTasks(UUID idUser,UUID idObjective) throws ExternalServiceErrorException {
         ResponseEntity<List<TaskDTO>> response;
         try {
@@ -86,7 +92,6 @@ public class DashboardService {
         }
 
         return objectiveTaskAnalysisDTO;
-        // TODO: BLUE
     }
 
     public ResponseObjectiveDTO getResponseObjectiveDTO(UUID idUser, UUID idCategory) {
