@@ -21,7 +21,7 @@ public class ObjectiveServiceClientTest {
 
         ValidatableResponse response = requestSpecification
                 .when()
-                .get("http://localhost:8080/actuator/health")
+                .get("http://localhost:8088/actuator/health")
                 .then();
 
         response.assertThat().statusCode(200).and()

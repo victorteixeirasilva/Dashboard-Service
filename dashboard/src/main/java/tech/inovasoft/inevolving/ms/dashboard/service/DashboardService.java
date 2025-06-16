@@ -87,7 +87,6 @@ public class DashboardService {
                             .count()
             );
 
-            // TODO: Falta tasks canceladas.
             if (objectiveTaskAnalysisDTO.getTotNumberTasks() > 0) {
                 double percentageTasksDone = ((double) objectiveTaskAnalysisDTO.getNumberTasksDone() / objectiveTaskAnalysisDTO.getTotNumberTasks()) * 100;
                 objectiveTaskAnalysisDTO.setPercentageTasksDone((int) Math.round(percentageTasksDone));
@@ -100,7 +99,6 @@ public class DashboardService {
 
                 double percentageTasksInProgress = ((double) objectiveTaskAnalysisDTO.getNumberTasksInProgress() / objectiveTaskAnalysisDTO.getTotNumberTasks()) * 100;
                 objectiveTaskAnalysisDTO.setPercentageTasksInProgress((int) Math.round(percentageTasksInProgress));
-                // TODO: Falta tasks canceladas.
             }
         }
 
@@ -177,6 +175,7 @@ public class DashboardService {
     public ResponseDashbordDTO getDashboard(
             UUID idUser
     ) throws ExternalServiceErrorException {
+
         ResponseEntity<CategoriesDTO> responseCategories = categoryServiceClient.getCategories(idUser);
         List<ResponseCategoryDTO> categoryDTOList = new ArrayList<>();
 
