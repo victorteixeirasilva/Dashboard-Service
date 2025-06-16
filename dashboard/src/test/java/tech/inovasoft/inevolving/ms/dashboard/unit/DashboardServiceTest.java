@@ -6,14 +6,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
+import tech.inovasoft.inevolving.ms.dashboard.domain.dto.response.ResponseCategoryDTO;
+import tech.inovasoft.inevolving.ms.dashboard.domain.dto.response.ResponseDashbordDTO;
 import tech.inovasoft.inevolving.ms.dashboard.domain.dto.response.ResponseObjectiveDTO;
 import tech.inovasoft.inevolving.ms.dashboard.domain.exception.ExternalServiceErrorException;
 import tech.inovasoft.inevolving.ms.dashboard.service.DashboardService;
 import tech.inovasoft.inevolving.ms.dashboard.service.client.category.CategoryServiceClient;
-import tech.inovasoft.inevolving.ms.dashboard.service.client.category.dto.CategoryDTO;
-import tech.inovasoft.inevolving.ms.dashboard.service.client.category.dto.ObjectiveDTO;
-import tech.inovasoft.inevolving.ms.dashboard.service.client.category.dto.ObjectivesByCategoryDTO;
-import tech.inovasoft.inevolving.ms.dashboard.service.client.category.dto.StatusObjectiveDTO;
+import tech.inovasoft.inevolving.ms.dashboard.service.client.category.dto.*;
 import tech.inovasoft.inevolving.ms.dashboard.service.client.task.TaskServiceClient;
 import tech.inovasoft.inevolving.ms.dashboard.service.client.task.dto.StatusTaskDTO;
 import tech.inovasoft.inevolving.ms.dashboard.service.client.task.dto.TaskDTO;
@@ -288,6 +287,131 @@ public class DashboardServiceTest {
                 assertEquals(20, result.percentageTasksInProgress());
                 assertEquals(20, result.percentageTasksDone());
         }
+
+        @Test
+        public void getResponseCategoryDTO() {
+                // Given
+                CategoryDTO category = new CategoryDTO(
+                        UUID.randomUUID(),
+                        "Category 1",
+                        "Category 1 description"
+                );
+
+                List<ResponseObjectiveDTO> objectives = new ArrayList<>();
+                ResponseObjectiveDTO responseObjectiveDTO = new ResponseObjectiveDTO(
+                        UUID.randomUUID(),
+                        "Objective 1",
+                        "Objective 1 description",
+                        StatusObjectiveDTO.TODO,
+                        null,
+                        idUser,
+                        10,
+                        5,
+                        2,
+                        2,
+                        1,
+                        50,
+                        20,
+                        20,
+                        10
+                );
+                ResponseCategoryDTO expectedResponseCategoryDTO = new ResponseCategoryDTO(
+                        category.id(),
+                        category.categoryName(),
+                        category.categoryDescription(),
+                        objectives
+                );
+
+                // When
+                var result = dashboardService.getResponseCategoryDTO(category);
+
+                // Then
+                assertNotNull(result);
+                assertEquals(expectedResponseCategoryDTO.id(), result.id());
+                assertEquals(expectedResponseCategoryDTO.categoryName(), result.categoryName());
+                assertEquals(expectedResponseCategoryDTO.categoryDescription(), result.categoryDescription());
+                assertEquals(expectedResponseCategoryDTO.objectives(), result.objectives());
+        }
+
+        @Test
+        public void getDashboard() {
+                // Given
+                UUID idUser = UUID.randomUUID();
+
+                List<ResponseCategoryDTO> categoryDTOList = new ArrayList<>();
+                List<ResponseObjectiveDTO> objectives = new ArrayList<>();
+
+                ResponseObjectiveDTO responseObjectiveDTO = new ResponseObjectiveDTO(
+                        UUID.randomUUID(),
+                        "Objective 1",
+                        "Objective 1 description",
+                        StatusObjectiveDTO.TODO,
+                        null,
+                        idUser,
+                        10,
+                        5,
+                        2,
+                        2,
+                        1,
+                        50,
+                        20,
+                        20,
+                        10
+                );
+                objectives.add(responseObjectiveDTO);
+
+                ResponseCategoryDTO responseCategoryDTO = new ResponseCategoryDTO(
+                        UUID.randomUUID(),
+                        "Category 1",
+                        "Category 1 description",
+                        objectives
+                );
+                categoryDTOList.add(responseCategoryDTO);
+
+
+                ResponseDashbordDTO expectedResponseDashbordDTO = new ResponseDashbordDTO(
+                        idUser,
+                        categoryDTOList
+                );
+
+                List<CategoryDTO> categories = new ArrayList<>();
+                CategoryDTO categoryDTO = new CategoryDTO(
+                        responseCategoryDTO.id(),
+                        responseCategoryDTO.categoryName(),
+                        responseCategoryDTO.categoryDescription()
+                );
+                categories.add(categoryDTO);
+
+                CategoriesDTO categoriesDTO = new CategoriesDTO(idUser, categories);
+
+                List<ObjectiveDTO> objectivesByCategory = new ArrayList<>();
+                ObjectiveDTO objectiveDTO = new ObjectiveDTO(
+                        responseObjectiveDTO.id(),
+                        responseObjectiveDTO.nameObjective(),
+                        responseObjectiveDTO.descriptionObjective(),
+                        responseObjectiveDTO.statusObjective(),
+                        responseObjectiveDTO.completionDate(),
+                        responseObjectiveDTO.idUser()
+                );
+
+                ObjectivesByCategoryDTO objectivesByCategoryDTO = new ObjectivesByCategoryDTO(
+                        categoryDTO,
+                        objectivesByCategory
+                );
+
+                // When
+                when(categoryServiceClient.getCategories(idUser))
+                        .thenReturn(ResponseEntity.ok(categoriesDTO));
+                when(categoryServiceClient.getObjectivesByCategory(idUser, responseCategoryDTO.id()))
+                        .thenReturn(ResponseEntity.ok(objectivesByCategoryDTO));
+                var result = dashboardService.getDashboard(idUser);
+
+                // Then
+                assertNotNull(result);
+                assertEquals(expectedResponseDashbordDTO.idUser(), result.idUser());
+                assertEquals(expectedResponseDashbordDTO.categoryDTOList(), result.categoryDTOList());
+        }
+
 
 
 }

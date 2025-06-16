@@ -8,8 +8,6 @@ import tech.inovasoft.inevolving.ms.dashboard.service.client.category.dto.Catego
 import tech.inovasoft.inevolving.ms.dashboard.service.client.category.dto.ObjectivesByCategoryDTO;
 
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-
 
 @FeignClient(
         name = "categories-service",
