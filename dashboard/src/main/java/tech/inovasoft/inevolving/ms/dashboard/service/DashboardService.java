@@ -98,7 +98,16 @@ public class DashboardService {
         return objectiveTaskAnalysisDTO;
     }
 
-    public ResponseObjectiveDTO getResponseObjectiveDTO(UUID idUser, ObjectiveDTO objectiveDTO) throws ExternalServiceErrorException {
+    /**
+     * @desciprion - Busca as informações de um objetivo. | Search objective information.
+     * @param idUser - ID do usuário. | User ID
+     * @param objectiveDTO - Objeto com informações do objetivo. | Objective object
+     * @return - Objeto com informações do objetivo. | Objective object
+     */
+    public ResponseObjectiveDTO getResponseObjectiveDTO(
+            UUID idUser,
+            ObjectiveDTO objectiveDTO
+    ) throws ExternalServiceErrorException {
         var analysis = analysisTheObjectiveTasks(idUser, objectiveDTO.id());
 
         return new ResponseObjectiveDTO(
@@ -118,7 +127,6 @@ public class DashboardService {
                 analysis.getPercentageTasksInProgress(),
                 analysis.getPercentageTasksOverdue()
         );
-        // TODO: BLUE
     }
 
     public ResponseCategoryDTO getResponseCategoryDTO() { // TODO: Definir parâmetros para a busca
