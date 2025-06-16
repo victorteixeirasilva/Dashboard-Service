@@ -9,6 +9,7 @@ import tech.inovasoft.inevolving.ms.dashboard.domain.dto.response.ResponseDashbo
 import tech.inovasoft.inevolving.ms.dashboard.domain.dto.response.ResponseObjectiveDTO;
 import tech.inovasoft.inevolving.ms.dashboard.domain.exception.ExternalServiceErrorException;
 import tech.inovasoft.inevolving.ms.dashboard.service.client.category.CategoryServiceClient;
+import tech.inovasoft.inevolving.ms.dashboard.service.client.category.dto.CategoriesDTO;
 import tech.inovasoft.inevolving.ms.dashboard.service.client.category.dto.CategoryDTO;
 import tech.inovasoft.inevolving.ms.dashboard.service.client.category.dto.ObjectiveDTO;
 import tech.inovasoft.inevolving.ms.dashboard.service.client.category.dto.ObjectivesByCategoryDTO;
@@ -138,10 +139,19 @@ public class DashboardService {
         );
     }
 
-    public ResponseCategoryDTO getResponseCategoryDTO(UUID idUser, CategoryDTO category) throws ExternalServiceErrorException {
+    /**
+     * @desciprion - Busca as informações de um objetivo. | Search objective information.
+     * @param idUser - ID do usuário. | User ID
+     * @param category - Objeto com informações da categoria. | Category object
+     */
+    public ResponseCategoryDTO getResponseCategoryDTO(
+            UUID idUser,
+            CategoryDTO category
+    ) throws ExternalServiceErrorException {
         List<ResponseObjectiveDTO> objectives = new ArrayList<>();
 
-        ResponseEntity<ObjectivesByCategoryDTO> objectivesByCategory = categoryServiceClient.getObjectivesByCategory(idUser, category.id());
+        ResponseEntity<ObjectivesByCategoryDTO> objectivesByCategory = categoryServiceClient
+                .getObjectivesByCategory(idUser, category.id());
 
         if (objectivesByCategory.getStatusCode().isSameCodeAs(HttpStatus.NOT_FOUND)) {
             // TODO: Nenhuma objetivo encontrado.
@@ -159,14 +169,27 @@ public class DashboardService {
                 category.categoryDescription(),
                 objectives
         );
-        // TODO: BLUE
     }
 
-    public ResponseDashbordDTO getDashboard(UUID idUser) {
-        // TODO: RED
-        // TODO: GREEN
+    public ResponseDashbordDTO getDashboard(UUID idUser) throws ExternalServiceErrorException {
+        ResponseEntity<CategoriesDTO> responseCategories = categoryServiceClient.getCategories(idUser);
+        List<ResponseCategoryDTO> categoryDTOList = new ArrayList<>();
+
+        if (responseCategories.getStatusCode().isSameCodeAs(HttpStatus.NOT_FOUND)) {
+            // TODO: Nenhuma categoria encontrada.
+        }
+
+        if (responseCategories.getStatusCode().isSameCodeAs(HttpStatus.OK)) {
+                for (CategoryDTO category : responseCategories.getBody().categories()) {
+                    categoryDTOList.add(getResponseCategoryDTO(idUser, category));
+                }
+        }
+
+        return new ResponseDashbordDTO(
+                idUser,
+                categoryDTOList
+        );
         // TODO: BLUE
-        return null;
     }
 
 }

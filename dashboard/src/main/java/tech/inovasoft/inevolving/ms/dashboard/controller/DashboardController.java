@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import tech.inovasoft.inevolving.ms.dashboard.domain.dto.response.ResponseDashbordDTO;
+import tech.inovasoft.inevolving.ms.dashboard.domain.exception.ExternalServiceErrorException;
 import tech.inovasoft.inevolving.ms.dashboard.service.DashboardService;
 
 import java.util.UUID;
@@ -30,7 +31,7 @@ public class DashboardController {
     )
     @Async("asyncExecutor")
     @GetMapping("/{idUser}")
-    public CompletableFuture<ResponseEntity<ResponseDashbordDTO>> getDashboard(UUID idUser) {
+    public CompletableFuture<ResponseEntity<ResponseDashbordDTO>> getDashboard(UUID idUser) throws ExternalServiceErrorException {
         return CompletableFuture.completedFuture(ResponseEntity.ok(
                 dashboardService.getDashboard(idUser)
         ));

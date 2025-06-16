@@ -428,7 +428,7 @@ public class DashboardServiceTest {
         }
 
         @Test
-        public void getDashboard() {
+        public void getDashboard() throws ExternalServiceErrorException {
                 // Given
                 UUID idUser = UUID.randomUUID();
 
@@ -487,6 +487,7 @@ public class DashboardServiceTest {
                         responseObjectiveDTO.completionDate(),
                         responseObjectiveDTO.idUser()
                 );
+                objectivesByCategory.add(objectiveDTO);
 
                 ObjectivesByCategoryDTO objectivesByCategoryDTO = new ObjectivesByCategoryDTO(
                         categoryDTO,
@@ -494,6 +495,89 @@ public class DashboardServiceTest {
                 );
 
                 // When
+                List<TaskDTO> taskDTOList = new ArrayList<>();
+                for (int i = 1; i <= 5; i++) {
+                        taskDTOList.add(new TaskDTO(
+                                        UUID.randomUUID(),
+                                        "Task " + i,
+                                        "Task " + i + " description",
+                                        StatusTaskDTO.TODO,
+                                        Date.valueOf(LocalDate.now()),
+                                        responseObjectiveDTO.id(),
+                                        idUser,
+                                        null,
+                                        null,
+                                        false,
+                                        false,
+                                        false,
+                                        null
+                                )
+                        );
+                }
+
+                for (int i = 1; i <= 2; i++) {
+                        taskDTOList.add(new TaskDTO(
+                                        UUID.randomUUID(),
+                                        "Task " + i,
+                                        "Task " + i + " description",
+                                        StatusTaskDTO.DONE,
+                                        Date.valueOf(LocalDate.now()),
+                                        responseObjectiveDTO.id(),
+                                        idUser,
+                                        null,
+                                        null,
+                                        false,
+                                        false,
+                                        false,
+                                        null
+                                )
+                        );
+                }
+
+                for (int i = 1; i <= 2; i++) {
+                        taskDTOList.add(new TaskDTO(
+                                        UUID.randomUUID(),
+                                        "Task " + i,
+                                        "Task " + i + " description",
+                                        StatusTaskDTO.IN_PROGRESS,
+                                        Date.valueOf(LocalDate.now()),
+                                        responseObjectiveDTO.id(),
+                                        idUser,
+                                        null,
+                                        null,
+                                        false,
+                                        false,
+                                        false,
+                                        null
+                                )
+                        );
+                }
+
+                taskDTOList.add(new TaskDTO(
+                                UUID.randomUUID(),
+                                "Task ",
+                                "Task description",
+                                StatusTaskDTO.LATE,
+                                Date.valueOf(LocalDate.now()),
+                                responseObjectiveDTO.id(),
+                                idUser,
+                                null,
+                                null,
+                                false,
+                                false,
+                                false,
+                                null
+                        )
+                );
+
+
+                // When
+                when(taskServiceClient.getTasksInDateRangeByObjectiveId(
+                        idUser,
+                        responseObjectiveDTO.id(),
+                        Date.valueOf(LocalDate.now().minusYears(1)),
+                        Date.valueOf(LocalDate.now().plusYears(1))
+                )).thenReturn(ResponseEntity.ok(taskDTOList));
                 when(categoryServiceClient.getCategories(idUser))
                         .thenReturn(ResponseEntity.ok(categoriesDTO));
                 when(categoryServiceClient.getObjectivesByCategory(idUser, responseCategoryDTO.id()))
