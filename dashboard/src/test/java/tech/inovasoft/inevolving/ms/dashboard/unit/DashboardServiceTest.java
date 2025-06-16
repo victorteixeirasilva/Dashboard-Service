@@ -6,6 +6,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
+import tech.inovasoft.inevolving.ms.dashboard.domain.exception.ExternalServiceErrorException;
 import tech.inovasoft.inevolving.ms.dashboard.service.DashboardService;
 import tech.inovasoft.inevolving.ms.dashboard.service.client.category.CategoryServiceClient;
 import tech.inovasoft.inevolving.ms.dashboard.service.client.category.dto.CategoryDTO;
@@ -84,7 +85,7 @@ public class DashboardServiceTest {
         }
 
         @Test
-        public void analysisTheObjectiveTasks() {
+        public void analysisTheObjectiveTasks() throws ExternalServiceErrorException {
                 // Given
                 UUID idObjective = UUID.randomUUID();
                 List<TaskDTO> taskDTOList = new ArrayList<>();
@@ -167,28 +168,28 @@ public class DashboardServiceTest {
                 when(taskServiceClient.getTasksInDateRangeByObjectiveId(
                         idUser,
                         idObjective,
-                        Date.valueOf(LocalDate.now().minusDays(1)),
-                        Date.valueOf(LocalDate.now().plusDays(30))
+                        Date.valueOf(LocalDate.now().minusYears(1)),
+                        Date.valueOf(LocalDate.now().plusYears(1))
                 )).thenReturn(ResponseEntity.ok(taskDTOList));
-                var result = dashboardService.analysisTheObjectiveTasks(idObjective);
+                var result = dashboardService.analysisTheObjectiveTasks(idUser,idObjective);
 
                 // Then
                 assertNotNull(result);
-                assertEquals(10, result.totNumberTasks());
-                assertEquals(5, result.numberTasksToDo());
-                assertEquals(1, result.percentageTasksOverdue());
-                assertEquals(2, result.numberTasksDone());
-                assertEquals(2, result.numberTasksInProgress());
-                assertEquals(50, result.percentageTasksToDo());
-                assertEquals(10, result.percentageTasksOverdue());
-                assertEquals(20, result.numberTasksInProgress());
-                assertEquals(20, result.percentageTasksDone());
+                assertEquals(10, result.getTotNumberTasks());
+                assertEquals(5, result.getNumberTasksToDo());
+                assertEquals(1, result.getNumberTasksOverdue());
+                assertEquals(2, result.getNumberTasksDone());
+                assertEquals(2, result.getNumberTasksInProgress());
+                assertEquals(50, result.getPercentageTasksToDo());
+                assertEquals(10, result.getPercentageTasksOverdue());
+                assertEquals(20, result.getPercentageTasksInProgress());
+                assertEquals(20, result.getPercentageTasksDone());
 
                 verify(taskServiceClient).getTasksInDateRangeByObjectiveId(
                         idUser,
                         idObjective,
-                        Date.valueOf(LocalDate.now().minusDays(1)),
-                        Date.valueOf(LocalDate.now().plusDays(30))
+                        Date.valueOf(LocalDate.now().minusYears(1)),
+                        Date.valueOf(LocalDate.now().plusYears(1))
                 );
 
         }

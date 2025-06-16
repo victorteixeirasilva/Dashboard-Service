@@ -1,14 +1,21 @@
 package tech.inovasoft.inevolving.ms.dashboard.service.client.task.dto;
 
-public record ObjectiveTaskAnalysisDTO(
-        int totNumberTasks,
-        int numberTasksToDo,
-        int numberTasksDone,
-        int numberTasksInProgress,
-        int numberTasksOverdue,
-        int percentageTasksToDo,
-        int percentageTasksDone,
-        int percentageTasksInProgress,
-        int percentageTasksOverdue
-) {
+import lombok.*;
+import org.springframework.web.bind.annotation.GetMapping;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
+public class ObjectiveTaskAnalysisDTO{
+    private int totNumberTasks;
+    private int numberTasksToDo;
+    private int numberTasksDone;
+    private int numberTasksInProgress;
+    private int numberTasksOverdue;
+    private int percentageTasksToDo;
+    private int percentageTasksDone;
+    private int percentageTasksInProgress;
+    private int percentageTasksOverdue;
 }
