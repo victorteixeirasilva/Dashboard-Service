@@ -98,10 +98,27 @@ public class DashboardService {
         return objectiveTaskAnalysisDTO;
     }
 
-    public ResponseObjectiveDTO getResponseObjectiveDTO(UUID idUser, ObjectiveDTO objectiveDTO) {
-        // TODO: GREEN
+    public ResponseObjectiveDTO getResponseObjectiveDTO(UUID idUser, ObjectiveDTO objectiveDTO) throws ExternalServiceErrorException {
+        var analysis = analysisTheObjectiveTasks(idUser, objectiveDTO.id());
+
+        return new ResponseObjectiveDTO(
+                objectiveDTO.id(),
+                objectiveDTO.nameObjective(),
+                objectiveDTO.descriptionObjective(),
+                objectiveDTO.statusObjective(),
+                objectiveDTO.completionDate(),
+                objectiveDTO.idUser(),
+                analysis.getTotNumberTasks(),
+                analysis.getNumberTasksToDo(),
+                analysis.getNumberTasksDone(),
+                analysis.getNumberTasksInProgress(),
+                analysis.getNumberTasksOverdue(),
+                analysis.getPercentageTasksToDo(),
+                analysis.getPercentageTasksDone(),
+                analysis.getPercentageTasksInProgress(),
+                analysis.getPercentageTasksOverdue()
+        );
         // TODO: BLUE
-        return null;
     }
 
     public ResponseCategoryDTO getResponseCategoryDTO() { // TODO: Definir parâmetros para a busca

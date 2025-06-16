@@ -155,7 +155,7 @@ public class DashboardServiceTest {
         }
 
         @Test
-        public void getResponseObjectiveDTO() {
+        public void getResponseObjectiveDTO() throws ExternalServiceErrorException {
                 // Given
                 var idUser = UUID.randomUUID();
                 UUID idObjective = UUID.randomUUID();
