@@ -171,6 +171,10 @@ public class DashboardService {
         );
     }
 
+    /**
+     * @desciprion - Busca o dashboard do usuário. | Search user dashboard
+     * @param idUser - ID do usuário. | User ID
+     */
     public ResponseDashbordDTO getDashboard(UUID idUser) throws ExternalServiceErrorException {
         ResponseEntity<CategoriesDTO> responseCategories = categoryServiceClient.getCategories(idUser);
         List<ResponseCategoryDTO> categoryDTOList = new ArrayList<>();
@@ -189,7 +193,6 @@ public class DashboardService {
                 idUser,
                 categoryDTOList
         );
-        // TODO: BLUE
     }
 
 }
