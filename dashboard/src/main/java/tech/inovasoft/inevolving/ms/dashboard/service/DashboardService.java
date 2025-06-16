@@ -139,7 +139,6 @@ public class DashboardService {
     }
 
     public ResponseCategoryDTO getResponseCategoryDTO(UUID idUser, CategoryDTO category) throws ExternalServiceErrorException {
-        // TODO: GREEN
         List<ResponseObjectiveDTO> objectives = new ArrayList<>();
 
         ResponseEntity<ObjectivesByCategoryDTO> objectivesByCategory = categoryServiceClient.getObjectivesByCategory(idUser, category.id());
