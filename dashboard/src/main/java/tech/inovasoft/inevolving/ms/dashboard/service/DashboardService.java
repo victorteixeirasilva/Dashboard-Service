@@ -150,10 +150,6 @@ public class DashboardService {
         ResponseEntity<ObjectivesByCategoryDTO> objectivesByCategory = categoryServiceClient
                 .getObjectivesByCategory(idUser, category.id());
 
-        if (objectivesByCategory.getStatusCode().isSameCodeAs(HttpStatus.NOT_FOUND)) {
-            // TODO: Nenhuma objetivo encontrado.
-        }
-
         if (objectivesByCategory.getStatusCode().isSameCodeAs(HttpStatus.OK)) {
             for (ObjectiveDTO objective : objectivesByCategory.getBody().objectives()) {
                 objectives.add(getResponseObjectiveDTO(idUser, objective));
@@ -178,10 +174,6 @@ public class DashboardService {
 
         ResponseEntity<CategoriesDTO> responseCategories = categoryServiceClient.getCategories(idUser);
         List<ResponseCategoryDTO> categoryDTOList = new ArrayList<>();
-
-        if (responseCategories.getStatusCode().isSameCodeAs(HttpStatus.NOT_FOUND)) {
-            // TODO: Nenhuma categoria encontrada.
-        }
 
         if (responseCategories.getStatusCode().isSameCodeAs(HttpStatus.OK)) {
                 for (CategoryDTO category : responseCategories.getBody().categories()) {
