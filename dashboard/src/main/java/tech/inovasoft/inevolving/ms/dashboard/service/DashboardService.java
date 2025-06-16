@@ -57,11 +57,11 @@ public class DashboardService {
             throw new ExternalServiceErrorException("task-service");
         }
 
+        var objectiveTaskAnalysisDTO = new ObjectiveTaskAnalysisDTO(0,0,0,0,0,0,0,0,0);
         if (response.getStatusCode().isSameCodeAs(HttpStatus.NOT_FOUND)) {
-            // TODO: Nenhuma tarefa encontrada.
+            return objectiveTaskAnalysisDTO;
         }
 
-        var objectiveTaskAnalysisDTO = new ObjectiveTaskAnalysisDTO(0,0,0,0,0,0,0,0,0);
         List<TaskDTO> tasks = response.getBody();
 
         if (tasks != null) {
