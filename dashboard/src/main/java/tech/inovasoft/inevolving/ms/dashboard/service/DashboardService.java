@@ -1,5 +1,6 @@
 package tech.inovasoft.inevolving.ms.dashboard.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -7,8 +8,10 @@ import tech.inovasoft.inevolving.ms.dashboard.domain.dto.response.ResponseCatego
 import tech.inovasoft.inevolving.ms.dashboard.domain.dto.response.ResponseDashbordDTO;
 import tech.inovasoft.inevolving.ms.dashboard.domain.dto.response.ResponseObjectiveDTO;
 import tech.inovasoft.inevolving.ms.dashboard.domain.exception.ExternalServiceErrorException;
+import tech.inovasoft.inevolving.ms.dashboard.service.client.category.CategoryServiceClient;
 import tech.inovasoft.inevolving.ms.dashboard.service.client.category.dto.CategoryDTO;
 import tech.inovasoft.inevolving.ms.dashboard.service.client.category.dto.ObjectiveDTO;
+import tech.inovasoft.inevolving.ms.dashboard.service.client.category.dto.ObjectivesByCategoryDTO;
 import tech.inovasoft.inevolving.ms.dashboard.service.client.task.TaskServiceClient;
 import tech.inovasoft.inevolving.ms.dashboard.service.client.task.dto.ObjectiveTaskAnalysisDTO;
 import tech.inovasoft.inevolving.ms.dashboard.service.client.task.dto.StatusTaskDTO;
@@ -16,13 +19,18 @@ import tech.inovasoft.inevolving.ms.dashboard.service.client.task.dto.TaskDTO;
 
 import java.sql.Date;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 @Service
 public class DashboardService {
 
+    @Autowired
     private TaskServiceClient taskServiceClient;
+
+    @Autowired
+    private CategoryServiceClient categoryServiceClient;
 
     /**
      * @desciprion - Analisa as tarefas de um objetivo. | Analyze the tasks of a goal.
@@ -130,10 +138,29 @@ public class DashboardService {
         );
     }
 
-    public ResponseCategoryDTO getResponseCategoryDTO(CategoryDTO category) {
+    public ResponseCategoryDTO getResponseCategoryDTO(UUID idUser, CategoryDTO category) throws ExternalServiceErrorException {
         // TODO: GREEN
+        List<ResponseObjectiveDTO> objectives = new ArrayList<>();
+
+        ResponseEntity<ObjectivesByCategoryDTO> objectivesByCategory = categoryServiceClient.getObjectivesByCategory(idUser, category.id());
+
+        if (objectivesByCategory.getStatusCode().isSameCodeAs(HttpStatus.NOT_FOUND)) {
+            // TODO: Nenhuma objetivo encontrado.
+        }
+
+        if (objectivesByCategory.getStatusCode().isSameCodeAs(HttpStatus.OK)) {
+            for (ObjectiveDTO objective : objectivesByCategory.getBody().objectives()) {
+                objectives.add(getResponseObjectiveDTO(idUser, objective));
+            }
+        }
+
+        return new ResponseCategoryDTO(
+                category.id(),
+                category.categoryName(),
+                category.categoryDescription(),
+                objectives
+        );
         // TODO: BLUE
-        return null;
     }
 
     public ResponseDashbordDTO getDashboard(UUID idUser) {
