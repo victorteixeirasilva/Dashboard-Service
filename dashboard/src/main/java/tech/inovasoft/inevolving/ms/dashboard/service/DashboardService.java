@@ -7,6 +7,7 @@ import tech.inovasoft.inevolving.ms.dashboard.domain.dto.response.ResponseCatego
 import tech.inovasoft.inevolving.ms.dashboard.domain.dto.response.ResponseDashbordDTO;
 import tech.inovasoft.inevolving.ms.dashboard.domain.dto.response.ResponseObjectiveDTO;
 import tech.inovasoft.inevolving.ms.dashboard.domain.exception.ExternalServiceErrorException;
+import tech.inovasoft.inevolving.ms.dashboard.service.client.category.dto.ObjectiveDTO;
 import tech.inovasoft.inevolving.ms.dashboard.service.client.task.TaskServiceClient;
 import tech.inovasoft.inevolving.ms.dashboard.service.client.task.dto.ObjectiveTaskAnalysisDTO;
 import tech.inovasoft.inevolving.ms.dashboard.service.client.task.dto.StatusTaskDTO;
@@ -28,7 +29,10 @@ public class DashboardService {
      * @param idObjective - ID do objetivo. | Objective ID
      * @return - Objeto com informações sobre as tarefas. | Object with task information
      */
-    public ObjectiveTaskAnalysisDTO analysisTheObjectiveTasks(UUID idUser,UUID idObjective) throws ExternalServiceErrorException {
+    public ObjectiveTaskAnalysisDTO analysisTheObjectiveTasks(
+            UUID idUser,
+            UUID idObjective
+    ) throws ExternalServiceErrorException {
         ResponseEntity<List<TaskDTO>> response;
         try {
             response = taskServiceClient
@@ -94,8 +98,7 @@ public class DashboardService {
         return objectiveTaskAnalysisDTO;
     }
 
-    public ResponseObjectiveDTO getResponseObjectiveDTO(UUID idUser, UUID idCategory) {
-        // TODO: RED
+    public ResponseObjectiveDTO getResponseObjectiveDTO(UUID idUser, ObjectiveDTO objectiveDTO) {
         // TODO: GREEN
         // TODO: BLUE
         return null;
