@@ -4,13 +4,20 @@ import org.springframework.stereotype.Service;
 import tech.inovasoft.inevolving.ms.dashboard.domain.dto.response.ResponseCategoryDTO;
 import tech.inovasoft.inevolving.ms.dashboard.domain.dto.response.ResponseDashbordDTO;
 import tech.inovasoft.inevolving.ms.dashboard.domain.dto.response.ResponseObjectiveDTO;
+import tech.inovasoft.inevolving.ms.dashboard.service.client.task.dto.ObjectiveTaskAnalysisDTO;
 
 import java.util.UUID;
 
 @Service
 public class DashboardService {
 
-    public ResponseObjectiveDTO getResponseObjectiveDTO() { // TODO: Definir parâmetros para a busca
+    public ObjectiveTaskAnalysisDTO analysisTheObjectiveTasks(UUID idObjective) {
+        // TODO: GREEN
+        // TODO: BLUE
+        return null;
+    }
+
+    public ResponseObjectiveDTO getResponseObjectiveDTO(UUID idUser, UUID idCategory) {
         // TODO: RED
         // TODO: GREEN
         // TODO: BLUE
