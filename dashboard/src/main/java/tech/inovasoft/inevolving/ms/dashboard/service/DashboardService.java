@@ -49,7 +49,6 @@ public class DashboardService {
                     .getTasksInDateRangeByObjectiveId(
                             idUser,
                             idObjective,
-                            // TODO: Corrigir end-point para não pedir datas.
                             Date.valueOf(LocalDate.now().minusYears(1)),
                             Date.valueOf(LocalDate.now().plusYears(1))
                     );
