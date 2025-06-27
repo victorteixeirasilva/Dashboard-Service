@@ -11,7 +11,7 @@ import java.util.UUID;
 
 @FeignClient(
         name = "categories-service",
-        url = "http://localhost:8081/ms/categories"
+        url = "${inevolving.uri.ms.categories}"
 )
 public interface CategoryServiceClient {
 

@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import tech.inovasoft.inevolving.ms.dashboard.service.client.email_service.dto.EmailRequest;
 
 
-@FeignClient(name = "email-service", url = "http://localhost:8092/ms/email")
+@FeignClient(name = "email-service", url = "${inevolving.uri.ms.dashboard}")
 public interface EmailServiceClient {
 
     @PostMapping
