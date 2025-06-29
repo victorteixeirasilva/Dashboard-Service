@@ -1,0 +1,13 @@
+services:
+  dashboard-service:
+    build:
+      context: .
+    container_name: dashboard-service
+#    ports:
+#      - "8086:8086"
+    networks:
+      - backend
+
+networks:
+  backend:
+    external: true
