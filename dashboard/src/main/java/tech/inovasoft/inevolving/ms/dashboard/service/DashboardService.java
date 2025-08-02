@@ -53,13 +53,15 @@ public class DashboardService {
                             Date.valueOf(LocalDate.now().plusYears(1))
                     );
         } catch (Exception e) {
-            throw new ExternalServiceErrorException("task-service");
+//            throw new ExternalServiceErrorException("task-service");
+             return new ObjectiveTaskAnalysisDTO(0,0,0,0,0,0,0,0,0);
+
         }
 
         var objectiveTaskAnalysisDTO = new ObjectiveTaskAnalysisDTO(0,0,0,0,0,0,0,0,0);
-        if (response.getStatusCode().isSameCodeAs(HttpStatus.NOT_FOUND)) {
-            return objectiveTaskAnalysisDTO;
-        }
+//        if (response.getStatusCode().isSameCodeAs(HttpStatus.NOT_FOUND)) {
+//            return objectiveTaskAnalysisDTO;
+//        }
 
         List<TaskDTO> tasks = response.getBody();
 
