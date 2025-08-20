@@ -25,4 +25,9 @@ public interface TaskServiceClient {
             @PathVariable Date endDate
     );
 
+    @GetMapping("/objective/{idUser}/{idObjective}")
+    ResponseEntity<List<TaskDTO>> getTasksByObjectiveId(
+            @PathVariable UUID idUser,
+            @PathVariable UUID idObjective
+    );
 }

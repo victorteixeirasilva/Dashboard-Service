@@ -257,7 +257,9 @@ public class DashboardServiceTest {
                         50,
                         20,
                         20,
-                        10
+                        10,
+                        0,
+                        0
                 );
 
 
@@ -313,7 +315,9 @@ public class DashboardServiceTest {
                         50,
                         20,
                         20,
-                        10
+                        10,
+                        0,
+                        0
                 );
                 objectives.add(responseObjectiveDTO);
 
@@ -450,7 +454,9 @@ public class DashboardServiceTest {
                         50,
                         20,
                         20,
-                        10
+                        10,
+                        0,
+                        0
                 );
                 objectives.add(responseObjectiveDTO);
 

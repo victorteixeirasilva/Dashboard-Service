@@ -10,9 +10,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import tech.inovasoft.inevolving.ms.dashboard.domain.dto.response.ResponseDashbordDTO;
+import tech.inovasoft.inevolving.ms.dashboard.domain.dto.response.ResponseDashbordReasonCancellationDTO;
 import tech.inovasoft.inevolving.ms.dashboard.domain.exception.ExternalServiceErrorException;
 import tech.inovasoft.inevolving.ms.dashboard.service.DashboardService;
+import tech.inovasoft.inevolving.ms.dashboard.service.client.task.dto.TaskDTO;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -35,6 +38,30 @@ public class DashboardController {
     public CompletableFuture<ResponseEntity<ResponseDashbordDTO>> getDashboard(@PathVariable UUID idUser) throws ExternalServiceErrorException {
         return CompletableFuture.completedFuture(ResponseEntity.ok(
                 dashboardService.getDashboard(idUser)
+        ));
+    }
+
+    @Operation
+    @Async("asyncExecutor")
+    @GetMapping("/cancellation-reason/{idUser}/{idObjective}")
+    public CompletableFuture<ResponseEntity<ResponseDashbordReasonCancellationDTO>> getDashReasonCancellationByIdObjective(
+            @PathVariable UUID idUser,
+            @PathVariable UUID idObjective
+    ) throws ExternalServiceErrorException {
+        return CompletableFuture.completedFuture(ResponseEntity.ok(
+                dashboardService.getDashReasonCancellationByIdObjective(idUser, idObjective)
+        ));
+    }
+
+    @Operation
+    @Async("asyncExecutor")
+    @GetMapping("/tasks/cancellation-reason/{idUser}/{idObjective}")
+    public CompletableFuture<ResponseEntity<List<TaskDTO>>> getTaksReasonCancellationByIdObjective(
+            @PathVariable UUID idUser,
+            @PathVariable UUID idObjective
+    ) throws ExternalServiceErrorException {
+        return CompletableFuture.completedFuture(ResponseEntity.ok(
+                dashboardService.getTasksCancelledByObjective(idUser, idObjective)
         ));
     }
 

@@ -14,8 +14,10 @@ public class ObjectiveTaskAnalysisDTO{
     private int numberTasksDone;
     private int numberTasksInProgress;
     private int numberTasksOverdue;
+    private int numberTaskCancelled;
     private int percentageTasksToDo;
     private int percentageTasksDone;
     private int percentageTasksInProgress;
     private int percentageTasksOverdue;
+    private int percentageTaskCancelled;
 }

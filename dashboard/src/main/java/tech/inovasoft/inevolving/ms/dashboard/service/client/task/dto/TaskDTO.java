@@ -18,4 +18,17 @@ public record TaskDTO(
         Boolean isCopy,
         String cancellationReason
 ) {
+    @Override
+    public String toString() {
+        return "{" +
+                "id=" + id +
+                ", nameTask='" + nameTask + '\'' +
+                ", descriptionTask='" + descriptionTask + '\'' +
+                ", status='" + status + '\'' +
+                ", dateTask=" + dateTask +
+                ", idObjective=" + idObjective +
+                ", idUser=" + idUser +
+                ", cancellationReason='" + cancellationReason + '\'' +
+                "},";
+    }
 }

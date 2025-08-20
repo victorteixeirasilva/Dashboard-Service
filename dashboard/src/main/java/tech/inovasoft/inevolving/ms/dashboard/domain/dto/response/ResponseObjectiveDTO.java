@@ -15,9 +15,11 @@ public record ResponseObjectiveDTO(
         int numberTasksDone,
         int numberTasksInProgress,
         int numberTasksOverdue,
+        int numberTasksCancelled,
         int percentageTasksToDo,
         int percentageTasksDone,
         int percentageTasksInProgress,
-        int percentageTasksOverdue
+        int percentageTasksOverdue,
+        int percentageTasksCancelled
 ) {
 }

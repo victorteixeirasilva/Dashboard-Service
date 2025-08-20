@@ -4,9 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import tech.inovasoft.inevolving.ms.dashboard.domain.dto.response.ResponseCategoryDTO;
-import tech.inovasoft.inevolving.ms.dashboard.domain.dto.response.ResponseDashbordDTO;
-import tech.inovasoft.inevolving.ms.dashboard.domain.dto.response.ResponseObjectiveDTO;
+import tech.inovasoft.inevolving.ms.dashboard.domain.dto.response.*;
 import tech.inovasoft.inevolving.ms.dashboard.domain.exception.ExternalServiceErrorException;
 import tech.inovasoft.inevolving.ms.dashboard.service.client.category.CategoryServiceClient;
 import tech.inovasoft.inevolving.ms.dashboard.service.client.category.dto.CategoriesDTO;
@@ -46,22 +44,17 @@ public class DashboardService {
         ResponseEntity<List<TaskDTO>> response;
         try {
             response = taskServiceClient
-                    .getTasksInDateRangeByObjectiveId(
+                    .getTasksByObjectiveId(
                             idUser,
-                            idObjective,
-                            Date.valueOf(LocalDate.now().minusYears(1)),
-                            Date.valueOf(LocalDate.now().plusYears(1))
+                            idObjective
                     );
         } catch (Exception e) {
 //            throw new ExternalServiceErrorException("task-service");
-             return new ObjectiveTaskAnalysisDTO(0,0,0,0,0,0,0,0,0);
+             return new ObjectiveTaskAnalysisDTO(0,0,0,0,0,0,0,0,0,0,0);
 
         }
 
-        var objectiveTaskAnalysisDTO = new ObjectiveTaskAnalysisDTO(0,0,0,0,0,0,0,0,0);
-//        if (response.getStatusCode().isSameCodeAs(HttpStatus.NOT_FOUND)) {
-//            return objectiveTaskAnalysisDTO;
-//        }
+        var objectiveTaskAnalysisDTO = new ObjectiveTaskAnalysisDTO(0,0,0,0,0,0,0,0,0,0,0);
 
         List<TaskDTO> tasks = response.getBody();
 
@@ -87,6 +80,11 @@ public class DashboardService {
                             .filter(task -> task.status().equals(StatusTaskDTO.IN_PROGRESS))
                             .count()
             );
+            objectiveTaskAnalysisDTO.setNumberTaskCancelled(
+                    (int) tasks.stream()
+                            .filter(task -> task.status().equals(StatusTaskDTO.CANCELLED))
+                            .count()
+            );
 
             if (objectiveTaskAnalysisDTO.getTotNumberTasks() > 0) {
                 double percentageTasksDone = ((double) objectiveTaskAnalysisDTO.getNumberTasksDone() / objectiveTaskAnalysisDTO.getTotNumberTasks()) * 100;
@@ -100,6 +98,12 @@ public class DashboardService {
 
                 double percentageTasksInProgress = ((double) objectiveTaskAnalysisDTO.getNumberTasksInProgress() / objectiveTaskAnalysisDTO.getTotNumberTasks()) * 100;
                 objectiveTaskAnalysisDTO.setPercentageTasksInProgress((int) Math.round(percentageTasksInProgress));
+
+                double percentageTasksCancelled =
+                    ((double) objectiveTaskAnalysisDTO.getNumberTaskCancelled() /
+                    objectiveTaskAnalysisDTO.getTotNumberTasks()) * 100;
+                objectiveTaskAnalysisDTO.setPercentageTaskCancelled((int) Math.round(percentageTasksCancelled));
+
             }
         }
 
@@ -130,10 +134,12 @@ public class DashboardService {
                 analysis.getNumberTasksDone(),
                 analysis.getNumberTasksInProgress(),
                 analysis.getNumberTasksOverdue(),
+                analysis.getNumberTaskCancelled(),
                 analysis.getPercentageTasksToDo(),
                 analysis.getPercentageTasksDone(),
                 analysis.getPercentageTasksInProgress(),
-                analysis.getPercentageTasksOverdue()
+                analysis.getPercentageTasksOverdue(),
+                analysis.getPercentageTaskCancelled()
         );
     }
 
@@ -188,4 +194,64 @@ public class DashboardService {
         );
     }
 
+    public ResponseDashbordReasonCancellationDTO getDashReasonCancellationByIdObjective(UUID idUser, UUID idObjective) throws ExternalServiceErrorException {
+        List<TaskDTO> tasks = getTasksCancelledByObjective(idUser, idObjective);
+        List<ReasonDTO> reasonDTOList = new ArrayList<>();
+
+        for (TaskDTO task : tasks) {
+            String[] reasons = task.cancellationReason().split(";");
+
+            for (String reason : reasons) {
+                reason = reason.trim(); // Evita espaços indesejados
+                boolean found = false;
+
+                for (ReasonDTO reasonDTO : reasonDTOList) {
+                    if (reason.equalsIgnoreCase(reasonDTO.getReason())) {
+                        reasonDTO.setAmount(reasonDTO.getAmount() + 1);
+                        found = true;
+//                        break; // Já encontramos, não precisa continuar
+                    }
+                }
+
+                if (!found) {
+                    var newReason = new ReasonDTO();
+                    newReason.setReason(reason);
+                    newReason.setAmount(1);
+                    reasonDTOList.add(newReason);
+                }
+            }
+        }
+
+
+        return new ResponseDashbordReasonCancellationDTO(tasks.size(), reasonDTOList);
+    }
+
+    public List<TaskDTO> getTasksCancelledByObjective(UUID idUser, UUID idObjective) throws ExternalServiceErrorException {
+        ResponseEntity<List<TaskDTO>> response;
+        try {
+            response = taskServiceClient
+                    .getTasksByObjectiveId(
+                            idUser,
+                            idObjective
+                    );
+        } catch (Exception e) {
+            throw new ExternalServiceErrorException("task-service");
+        }
+
+        List<TaskDTO> tasks = response.getBody();
+
+        if (tasks != null && !tasks.isEmpty()) {
+            List<TaskDTO> tasksCancel = new ArrayList<>();
+
+            for (TaskDTO task : tasks) {
+                if (task.status().equals(StatusTaskDTO.CANCELLED)){
+                    tasksCancel.add(task);
+                }
+            }
+
+            return tasksCancel;
+        } else {
+            return new ArrayList<>();
+        }
+    }
 }
