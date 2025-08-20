@@ -12,6 +12,7 @@ import tech.inovasoft.inevolving.ms.dashboard.domain.dto.response.ResponseDashbo
 import tech.inovasoft.inevolving.ms.dashboard.domain.dto.response.ResponseObjectiveDTO;
 import tech.inovasoft.inevolving.ms.dashboard.domain.exception.ExternalServiceErrorException;
 import tech.inovasoft.inevolving.ms.dashboard.service.client.task.dto.TaskDTO;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.List;
 import java.util.Map;
@@ -29,12 +30,15 @@ public class ClaudeService {
         this.restTemplate = new RestTemplate();
     }
 
+    @Value("${inevolving.key.openrouter}")
+    private String openRouterKey;
+
     public String enviarParaClaude(ResponseObjectiveDTO dto) throws ExternalServiceErrorException {
         String url = "https://openrouter.ai/api/v1/chat/completions";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth("");
+        headers.setBearerAuth(openRouterKey);
 
         String prompt =
                 "Você receberá três objetos JSON:\n" +
