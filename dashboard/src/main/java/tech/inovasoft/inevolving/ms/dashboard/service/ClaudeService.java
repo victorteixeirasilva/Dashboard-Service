@@ -34,7 +34,7 @@ public class ClaudeService {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth("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");
+        headers.setBearerAuth("");
 
         String prompt =
                 "Você receberá três objetos JSON:\n" +
