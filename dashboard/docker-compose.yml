@@ -3,8 +3,8 @@ services:
     build:
       context: .
     container_name: dashboard-service
-    ports:
-      - "8086:8086"
+#    ports:
+#      - "8086:8086"
     networks:
       - backend
 
