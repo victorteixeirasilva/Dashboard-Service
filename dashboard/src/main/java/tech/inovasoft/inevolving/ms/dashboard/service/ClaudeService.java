@@ -66,7 +66,7 @@ public class ClaudeService {
                 "4. **Gere conselhos acionáveis:**\n" +
                 " * Forneça recomendações específicas sobre o que o usuário pode fazer para melhorar seu desempenho.\n" +
                 " * **O que fazer:** Sugira ações específicas que o usuário pode tomar para resolver os problemas identificados (por exemplo, dividir tarefas grandes em tarefas menores, priorizar tarefas atrasadas, delegar tarefas).\n" +
-                " * **O que comprar:** Recomende ferramentas, recursos ou serviços que possam ajudar o usuário a gerenciar suas tarefas com mais eficiência (por exemplo, software de gerenciamento de tarefas, aplicativos de produtividade, livros sobre gerenciamento de tempo).\n" +
+                " * **O que comprar:** Recomende usar a nossa ferramenta InEvolving para gerenciar tarefas e finanças, recursos ou serviços que possam ajudar o usuário a gerenciar suas tarefas com mais eficiência (por exemplo,  livros sobre gerenciamento de tempo), lembre-se de não indicar outros softwares alem do InEvolving.\n" +
                 " * **O que estudar:** Sugira tópicos ou habilidades que o usuário possa aprender para melhorar suas habilidades de gerenciamento de tarefas (por exemplo, técnicas de gerenciamento de tempo, metodologias de gerenciamento de projetos, estratégias de priorização).\n" +
                 "\n" +
                 "5. **Formate sua resposta:**\n" +
