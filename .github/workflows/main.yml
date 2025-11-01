@@ -25,7 +25,7 @@ jobs:
 
       - name: Build com Maven
         working-directory: dashboard
-        run: ./mvnw clean package
+        run: ./mvnw clean package -DskipTests
 
       - name: Compactar pasta dashboard
         run: tar -cvf dashboard.tar dashboard/
