@@ -45,8 +45,8 @@ jobs:
       
             rm -rf "$TARGET_DIR/dashboard"
             mkdir -p "$TARGET_DIR"
-            tar -xvf /tmp/task.tar -C "$TARGET_DIR"
-            rm /tmp/task.tar
+            tar -xvf /tmp/dashboard.tar -C "$TARGET_DIR"
+            rm /tmp/dashboard.tar
       
             cd "$TARGET_DIR/dashboard"
             docker-compose down --volumes --remove-orphans
