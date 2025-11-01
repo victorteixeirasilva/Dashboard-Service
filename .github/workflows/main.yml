@@ -1,0 +1,57 @@
+name: Deploy Java Backend via SSH with Password
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v3
+
+      - name: Instalar Java 21
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Dar permissão ao mvnw
+        working-directory: dashboard
+        run: chmod +x mvnw
+
+      - name: Build com Maven
+        working-directory: dashboard
+        run: ./mvnw clean package
+
+      - name: Compactar pasta dashboard
+        run: tar -cvf dashboard.tar dashboard/
+
+      - name: Instalar sshpass
+        run: sudo apt-get install -y sshpass
+
+      - name: Enviar .tar para VPS
+        run: |
+          sshpass -p "${{ secrets.VPS_PASSWORD }}" scp -o StrictHostKeyChecking=no dashboard.tar ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/tmp/dashboard.tar
+
+      - name: Executar comandos na VPS
+        run: |
+          TARGET_DIR="/home/root/Back-End/Dashboard-Service"
+          sshpass -p "${{ secrets.VPS_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << EOF
+            set -e
+      
+            rm -rf "$TARGET_DIR/dashboard"
+            mkdir -p "$TARGET_DIR"
+            tar -xvf /tmp/task.tar -C "$TARGET_DIR"
+            rm /tmp/task.tar
+      
+            cd "$TARGET_DIR/dashboard"
+            docker-compose down --volumes --remove-orphans
+            docker-compose up --build -d
+      
+            echo "Containers ativos:"
+            docker ps
+          EOF
