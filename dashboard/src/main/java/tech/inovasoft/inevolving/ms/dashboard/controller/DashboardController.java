@@ -3,6 +3,7 @@ package tech.inovasoft.inevolving.ms.dashboard.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,6 +14,8 @@ import tech.inovasoft.inevolving.ms.dashboard.domain.dto.response.ResponseDashbo
 import tech.inovasoft.inevolving.ms.dashboard.domain.dto.response.ResponseDashbordReasonCancellationDTO;
 import tech.inovasoft.inevolving.ms.dashboard.domain.exception.ExternalServiceErrorException;
 import tech.inovasoft.inevolving.ms.dashboard.service.DashboardService;
+import tech.inovasoft.inevolving.ms.dashboard.service.client.Auth_For_MService.TokenService;
+import tech.inovasoft.inevolving.ms.dashboard.service.client.Auth_For_MService.dto.TokenValidateResponse;
 import tech.inovasoft.inevolving.ms.dashboard.service.client.task.dto.TaskDTO;
 
 import java.util.List;
@@ -27,6 +30,9 @@ public class DashboardController {
     @Autowired
     private DashboardService dashboardService;
 
+    @Autowired
+    private TokenService tokenService;
+
     @Operation(
             summary =   "Get data analysis regarding user categories, goals and tasks. | " +
                         "Pegar analise de dados referente as categorias, objetivos e tarefas do usuário.",
@@ -34,8 +40,28 @@ public class DashboardController {
                             "Retorna um dashboard com dados referente as categorias, objetivos e tarefas do usuário."
     )
     @Async("asyncExecutor")
-    @GetMapping("/{idUser}")
-    public CompletableFuture<ResponseEntity<ResponseDashbordDTO>> getDashboard(@PathVariable UUID idUser) throws ExternalServiceErrorException {
+    @GetMapping("/{idUser}/{token}")
+    public CompletableFuture<ResponseEntity<ResponseDashbordDTO>> getDashboard(
+            @PathVariable UUID idUser,
+            @PathVariable String token
+    ) throws ExternalServiceErrorException {
+        TokenValidateResponse tokenValidateResponse = null;
+
+        try {
+            tokenValidateResponse = tokenService.validateToken(token);
+            if (tokenValidateResponse == null) {
+                return CompletableFuture.completedFuture(ResponseEntity.status(
+                        HttpStatus.UNAUTHORIZED
+                ).build());
+            }
+        } catch (Exception e) {
+            if (e.getMessage().equals("Invalid token")) {
+                return CompletableFuture.completedFuture(ResponseEntity.status(
+                        HttpStatus.UNAUTHORIZED
+                ).build());
+            }
+        }
+
         return CompletableFuture.completedFuture(ResponseEntity.ok(
                 dashboardService.getDashboard(idUser)
         ));
@@ -43,11 +69,29 @@ public class DashboardController {
 
     @Operation
     @Async("asyncExecutor")
-    @GetMapping("/cancellation-reason/{idUser}/{idObjective}")
+    @GetMapping("/cancellation-reason/{idUser}/{idObjective}/{token}")
     public CompletableFuture<ResponseEntity<ResponseDashbordReasonCancellationDTO>> getDashReasonCancellationByIdObjective(
             @PathVariable UUID idUser,
-            @PathVariable UUID idObjective
+            @PathVariable UUID idObjective,
+            @PathVariable String token
     ) throws ExternalServiceErrorException {
+        TokenValidateResponse tokenValidateResponse = null;
+
+        try {
+            tokenValidateResponse = tokenService.validateToken(token);
+            if (tokenValidateResponse == null) {
+                return CompletableFuture.completedFuture(ResponseEntity.status(
+                        HttpStatus.UNAUTHORIZED
+                ).build());
+            }
+        } catch (Exception e) {
+            if (e.getMessage().equals("Invalid token")) {
+                return CompletableFuture.completedFuture(ResponseEntity.status(
+                        HttpStatus.UNAUTHORIZED
+                ).build());
+            }
+        }
+
         return CompletableFuture.completedFuture(ResponseEntity.ok(
                 dashboardService.getDashReasonCancellationByIdObjective(idUser, idObjective)
         ));
@@ -55,11 +99,29 @@ public class DashboardController {
 
     @Operation
     @Async("asyncExecutor")
-    @GetMapping("/tasks/cancellation-reason/{idUser}/{idObjective}")
+    @GetMapping("/tasks/cancellation-reason/{idUser}/{idObjective}/{token}")
     public CompletableFuture<ResponseEntity<List<TaskDTO>>> getTaksReasonCancellationByIdObjective(
             @PathVariable UUID idUser,
-            @PathVariable UUID idObjective
+            @PathVariable UUID idObjective,
+            @PathVariable String token
     ) throws ExternalServiceErrorException {
+        TokenValidateResponse tokenValidateResponse = null;
+
+        try {
+            tokenValidateResponse = tokenService.validateToken(token);
+            if (tokenValidateResponse == null) {
+                return CompletableFuture.completedFuture(ResponseEntity.status(
+                        HttpStatus.UNAUTHORIZED
+                ).build());
+            }
+        } catch (Exception e) {
+            if (e.getMessage().equals("Invalid token")) {
+                return CompletableFuture.completedFuture(ResponseEntity.status(
+                        HttpStatus.UNAUTHORIZED
+                ).build());
+            }
+        }
+
         return CompletableFuture.completedFuture(ResponseEntity.ok(
                 dashboardService.getTasksCancelledByObjective(idUser, idObjective)
         ));

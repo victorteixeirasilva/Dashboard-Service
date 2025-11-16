@@ -1,11 +1,13 @@
 package tech.inovasoft.inevolving.ms.dashboard.service;
 
+import feign.FeignException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import tech.inovasoft.inevolving.ms.dashboard.domain.dto.response.*;
 import tech.inovasoft.inevolving.ms.dashboard.domain.exception.ExternalServiceErrorException;
+import tech.inovasoft.inevolving.ms.dashboard.service.client.Auth_For_MService.TokenCache;
 import tech.inovasoft.inevolving.ms.dashboard.service.client.category.CategoryServiceClient;
 import tech.inovasoft.inevolving.ms.dashboard.service.client.category.dto.CategoriesDTO;
 import tech.inovasoft.inevolving.ms.dashboard.service.client.category.dto.CategoryDTO;
@@ -16,11 +18,12 @@ import tech.inovasoft.inevolving.ms.dashboard.service.client.task.dto.ObjectiveT
 import tech.inovasoft.inevolving.ms.dashboard.service.client.task.dto.StatusTaskDTO;
 import tech.inovasoft.inevolving.ms.dashboard.service.client.task.dto.TaskDTO;
 
-import java.sql.Date;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
+import static tech.inovasoft.inevolving.ms.dashboard.service.client.Auth_For_MService.MicroServices.CATEGORIES_SERVICE;
+import static tech.inovasoft.inevolving.ms.dashboard.service.client.Auth_For_MService.MicroServices.TASKS_SERVICE;
 
 @Service
 public class DashboardService {
@@ -30,6 +33,26 @@ public class DashboardService {
 
     @Autowired
     private CategoryServiceClient categoryServiceClient;
+
+    @Autowired
+    private TokenCache tokenCache;
+
+    private String cachedTokenCategory;
+    private String cachedTokenTask;
+
+    private String getValidTokenCategory() {
+        if (cachedTokenCategory == null) {
+            cachedTokenCategory = tokenCache.getToken(CATEGORIES_SERVICE);
+        }
+        return cachedTokenCategory;
+    }
+
+    private String getValidTokenTask() {
+        if (cachedTokenTask == null) {
+            cachedTokenTask = tokenCache.getToken(TASKS_SERVICE);
+        }
+        return cachedTokenTask;
+    }
 
     /**
      * @desciprion - Analisa as tarefas de um objetivo. | Analyze the tasks of a goal.
@@ -46,12 +69,14 @@ public class DashboardService {
             response = taskServiceClient
                     .getTasksByObjectiveId(
                             idUser,
-                            idObjective
+                            idObjective,
+                            getValidTokenTask()
                     );
+        } catch (FeignException.Unauthorized e) {
+            cachedTokenTask = null;
+            return analysisTheObjectiveTasks(idUser, idObjective);
         } catch (Exception e) {
-//            throw new ExternalServiceErrorException("task-service");
-             return new ObjectiveTaskAnalysisDTO(0,0,0,0,0,0,0,0,0,0,0);
-
+            return new ObjectiveTaskAnalysisDTO(0,0,0,0,0,0,0,0,0,0,0);
         }
 
         var objectiveTaskAnalysisDTO = new ObjectiveTaskAnalysisDTO(0,0,0,0,0,0,0,0,0,0,0);
@@ -154,8 +179,14 @@ public class DashboardService {
     ) throws ExternalServiceErrorException {
         List<ResponseObjectiveDTO> objectives = new ArrayList<>();
 
-        ResponseEntity<ObjectivesByCategoryDTO> objectivesByCategory = categoryServiceClient
-                .getObjectivesByCategory(idUser, category.id());
+        ResponseEntity<ObjectivesByCategoryDTO> objectivesByCategory;
+        try {
+            objectivesByCategory = categoryServiceClient
+                    .getObjectivesByCategory(idUser, category.id(), getValidTokenCategory());
+        } catch (FeignException.Unauthorized e) {
+            cachedTokenCategory = null;
+            return getResponseCategoryDTO(idUser, category);
+        }
 
         if (objectivesByCategory.getStatusCode().isSameCodeAs(HttpStatus.OK)) {
             for (ObjectiveDTO objective : objectivesByCategory.getBody().objectives()) {
@@ -178,8 +209,16 @@ public class DashboardService {
     public ResponseDashbordDTO getDashboard(
             UUID idUser
     ) throws ExternalServiceErrorException {
+        ResponseEntity<CategoriesDTO> responseCategories;
 
-        ResponseEntity<CategoriesDTO> responseCategories = categoryServiceClient.getCategories(idUser);
+        try {
+            responseCategories = categoryServiceClient
+                    .getCategories(idUser, getValidTokenCategory());
+        } catch (FeignException.Unauthorized e) {
+            cachedTokenCategory = null;
+            return getDashboard(idUser);
+        }
+
         List<ResponseCategoryDTO> categoryDTOList = new ArrayList<>();
 
         if (responseCategories.getStatusCode().isSameCodeAs(HttpStatus.OK)) {
@@ -232,8 +271,12 @@ public class DashboardService {
             response = taskServiceClient
                     .getTasksByObjectiveId(
                             idUser,
-                            idObjective
+                            idObjective,
+                            getValidTokenTask()
                     );
+        } catch (FeignException.Unauthorized e) {
+            cachedTokenTask = null;
+            return getTasksCancelledByObjective(idUser, idObjective);
         } catch (Exception e) {
             throw new ExternalServiceErrorException("task-service");
         }

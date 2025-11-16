@@ -17,17 +17,19 @@ import java.util.concurrent.CompletableFuture;
 )
 public interface TaskServiceClient {
 
-    @GetMapping("/{idUser}/{idObjective}/{startDate}/{endDate}")
+    @GetMapping("/{idUser}/{idObjective}/{startDate}/{endDate}/{token}")
     ResponseEntity<List<TaskDTO>> getTasksInDateRangeByObjectiveId(
             @PathVariable UUID idUser,
             @PathVariable UUID idObjective,
             @PathVariable Date startDate,
-            @PathVariable Date endDate
+            @PathVariable Date endDate,
+            @PathVariable String token
     );
 
-    @GetMapping("/objective/{idUser}/{idObjective}")
+    @GetMapping("/objective/{idUser}/{idObjective}/{token}")
     ResponseEntity<List<TaskDTO>> getTasksByObjectiveId(
             @PathVariable UUID idUser,
-            @PathVariable UUID idObjective
+            @PathVariable UUID idObjective,
+            @PathVariable String token
     );
 }

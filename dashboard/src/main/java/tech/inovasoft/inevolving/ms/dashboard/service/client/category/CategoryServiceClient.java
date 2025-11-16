@@ -15,15 +15,17 @@ import java.util.UUID;
 )
 public interface CategoryServiceClient {
 
-    @GetMapping("/{idUser}")
+    @GetMapping("/{idUser}/{token}")
     ResponseEntity<CategoriesDTO> getCategories(
-            @PathVariable("idUser") UUID idUser
+            @PathVariable("idUser") UUID idUser,
+            @PathVariable String token
     );
 
-    @GetMapping("/{idUser}/{idCategory}")
+    @GetMapping("/{idUser}/{idCategory}/{token}")
     ResponseEntity<ObjectivesByCategoryDTO> getObjectivesByCategory(
             @PathVariable("idUser") UUID idUser,
-            @PathVariable("idCategory") UUID idCategory
+            @PathVariable("idCategory") UUID idCategory,
+            @PathVariable String token
     );
 
 }
