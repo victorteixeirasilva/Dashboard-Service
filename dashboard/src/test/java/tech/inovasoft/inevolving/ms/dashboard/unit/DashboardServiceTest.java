@@ -25,6 +25,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -128,7 +129,8 @@ public class DashboardServiceTest {
                         idUser,
                         idObjective,
                         Date.valueOf(LocalDate.now().minusYears(1)),
-                        Date.valueOf(LocalDate.now().plusYears(1))
+                        Date.valueOf(LocalDate.now().plusYears(1)),
+                        anyString()
                 )).thenReturn(ResponseEntity.ok(taskDTOList));
                 var result = dashboardService.analysisTheObjectiveTasks(idUser,idObjective);
 
@@ -148,7 +150,8 @@ public class DashboardServiceTest {
                         idUser,
                         idObjective,
                         Date.valueOf(LocalDate.now().minusYears(1)),
-                        Date.valueOf(LocalDate.now().plusYears(1))
+                        Date.valueOf(LocalDate.now().plusYears(1)),
+                        anyString()
                 );
 
         }
@@ -268,7 +271,8 @@ public class DashboardServiceTest {
                         idUser,
                         idObjective,
                         Date.valueOf(LocalDate.now().minusYears(1)),
-                        Date.valueOf(LocalDate.now().plusYears(1))
+                        Date.valueOf(LocalDate.now().plusYears(1)),
+                        anyString()
                 )).thenReturn(ResponseEntity.ok(taskDTOList));
                 var result = dashboardService.getResponseObjectiveDTO(idUser, objectiveDTO);
 
@@ -329,7 +333,7 @@ public class DashboardServiceTest {
                 );
 
                 // When
-                when(categoryServiceClient.getObjectivesByCategory(idUser, category.id()))
+                when(categoryServiceClient.getObjectivesByCategory(idUser, category.id(), anyString()))
                         .thenReturn(ResponseEntity.ok(new ObjectivesByCategoryDTO(category, List.of(new ObjectiveDTO(
                                 responseObjectiveDTO.id(),
                                 responseObjectiveDTO.nameObjective(),
@@ -419,7 +423,8 @@ public class DashboardServiceTest {
                         idUser,
                         responseObjectiveDTO.id(),
                         Date.valueOf(LocalDate.now().minusYears(1)),
-                        Date.valueOf(LocalDate.now().plusYears(1))
+                        Date.valueOf(LocalDate.now().plusYears(1)),
+                        anyString()
                 )).thenReturn(ResponseEntity.ok(taskDTOList));
                 var result = dashboardService.getResponseCategoryDTO(idUser,category);
 
@@ -582,11 +587,12 @@ public class DashboardServiceTest {
                         idUser,
                         responseObjectiveDTO.id(),
                         Date.valueOf(LocalDate.now().minusYears(1)),
-                        Date.valueOf(LocalDate.now().plusYears(1))
+                        Date.valueOf(LocalDate.now().plusYears(1)),
+                        anyString()
                 )).thenReturn(ResponseEntity.ok(taskDTOList));
-                when(categoryServiceClient.getCategories(idUser))
+                when(categoryServiceClient.getCategories(idUser, anyString()))
                         .thenReturn(ResponseEntity.ok(categoriesDTO));
-                when(categoryServiceClient.getObjectivesByCategory(idUser, responseCategoryDTO.id()))
+                when(categoryServiceClient.getObjectivesByCategory(idUser, responseCategoryDTO.id(), anyString()))
                         .thenReturn(ResponseEntity.ok(objectivesByCategoryDTO));
                 var result = dashboardService.getDashboard(idUser);
 
