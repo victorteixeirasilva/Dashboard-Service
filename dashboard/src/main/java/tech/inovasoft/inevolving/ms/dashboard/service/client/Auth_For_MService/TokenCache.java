@@ -8,6 +8,7 @@ import tech.inovasoft.inevolving.ms.dashboard.service.client.Auth_For_MService.d
 import tech.inovasoft.inevolving.ms.dashboard.service.client.Auth_For_MService.dto.AuthLoginResponse;
 
 import static tech.inovasoft.inevolving.ms.dashboard.service.client.Auth_For_MService.MicroServices.CATEGORIES_SERVICE;
+import static tech.inovasoft.inevolving.ms.dashboard.service.client.Auth_For_MService.MicroServices.DASHBOARD_SERVICE;
 
 @Service
 public class TokenCache {
@@ -19,7 +20,7 @@ public class TokenCache {
     private AuthForMServiceClient authForMServiceClient;
 
     public String getToken(MicroServices microServices){
-        AuthAuthenticationRequest request = new AuthAuthenticationRequest(CATEGORIES_SERVICE.getValue(), SUPER_SECRET);
+        AuthAuthenticationRequest request = new AuthAuthenticationRequest(DASHBOARD_SERVICE.getValue(), SUPER_SECRET);
         AuthLoginResponse response = authForMServiceClient.login(microServices.getValue(), request);
         return response.BearerToken();
     }
