@@ -13,7 +13,8 @@ import java.util.concurrent.CompletableFuture;
 
 @FeignClient(
         name = "task-service",
-        url = "${inevolving.uri.ms.task}"
+        url = "http://tasks-service:8085/ms/tasks"
+//        url = "${inevolving.uri.ms.task}"
 )
 public interface TaskServiceClient {
 
