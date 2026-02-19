@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import tech.inovasoft.inevolving.ms.dashboard.domain.dto.response.ResponseCategoryDTO;
 import tech.inovasoft.inevolving.ms.dashboard.domain.dto.response.ResponseDashbordDTO;
 import tech.inovasoft.inevolving.ms.dashboard.domain.dto.response.ResponseDashbordReasonCancellationDTO;
 import tech.inovasoft.inevolving.ms.dashboard.domain.exception.ExternalServiceErrorException;
@@ -92,6 +93,35 @@ public class DashboardController {
 
         return CompletableFuture.completedFuture(ResponseEntity.ok(
                 dashboardService.getCategories(idUser)
+        ));
+    }
+
+    @Async("asyncExecutor")
+    @GetMapping("/category/objectives/{idUser}/{idCategory}/{token}")
+    public CompletableFuture<ResponseEntity<ResponseCategoryDTO>> getObjectivesOfCategory(
+            @PathVariable UUID idUser,
+            @PathVariable UUID idCategory,
+            @PathVariable String token
+    ) throws ExternalServiceErrorException {
+        TokenValidateResponse tokenValidateResponse = null;
+
+        try {
+            tokenValidateResponse = tokenService.validateToken(token);
+            if (tokenValidateResponse == null) {
+                return CompletableFuture.completedFuture(ResponseEntity.status(
+                        HttpStatus.UNAUTHORIZED
+                ).build());
+            }
+        } catch (Exception e) {
+            if (e.getMessage().equals("Invalid token")) {
+                return CompletableFuture.completedFuture(ResponseEntity.status(
+                        HttpStatus.UNAUTHORIZED
+                ).build());
+            }
+        }
+
+        return CompletableFuture.completedFuture(ResponseEntity.ok(
+                dashboardService.getObjectivesOfCategory(idUser, idCategory)
         ));
     }
 

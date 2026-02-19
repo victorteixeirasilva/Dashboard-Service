@@ -20,6 +20,7 @@ import tech.inovasoft.inevolving.ms.dashboard.service.client.task.dto.TaskDTO;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import static tech.inovasoft.inevolving.ms.dashboard.service.client.Auth_For_MService.MicroServices.CATEGORIES_SERVICE;
@@ -233,6 +234,32 @@ public class DashboardService {
         );
     }
 
+    public ResponseCategoryDTO getObjectivesOfCategory(
+            UUID idUser,
+            UUID idCategory
+    ) throws ExternalServiceErrorException {
+        ResponseEntity<CategoriesDTO> responseCategories;
+
+        try {
+            responseCategories = categoryServiceClient
+                    .getCategories(idUser, getValidTokenCategory());
+        } catch (FeignException.Unauthorized e) {
+            cachedTokenCategory = null;
+            return getObjectivesOfCategory(idUser, idCategory);
+        }
+
+        ResponseCategoryDTO category = null;
+        if (responseCategories.getStatusCode().isSameCodeAs(HttpStatus.OK)) {
+            for (CategoryDTO c : Objects.requireNonNull(responseCategories.getBody()).categories()) {
+                if (idCategory == c.id()) {
+                    category = getResponseCategoryDTO(idUser, c);
+                }
+            }
+        }
+
+        return category;
+    }
+
     public ResponseDashbordDTO getCategories(
             UUID idUser
     ) throws ExternalServiceErrorException {
@@ -243,7 +270,7 @@ public class DashboardService {
                     .getCategories(idUser, getValidTokenCategory());
         } catch (FeignException.Unauthorized e) {
             cachedTokenCategory = null;
-            return getDashboard(idUser);
+            return getCategories(idUser);
         }
 
         List<ResponseCategoryDTO> categoryDTOList = new ArrayList<>();
