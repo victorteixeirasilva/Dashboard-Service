@@ -248,16 +248,18 @@ public class DashboardService {
             return getObjectivesOfCategory(idUser, idCategory);
         }
 
-        ResponseCategoryDTO category = null;
         if (responseCategories.getStatusCode().isSameCodeAs(HttpStatus.OK)) {
+            ResponseCategoryDTO category = null;
             for (CategoryDTO c : Objects.requireNonNull(responseCategories.getBody()).categories()) {
                 if (idCategory == c.id()) {
                     category = getResponseCategoryDTO(idUser, c);
                 }
             }
+            return category;
         }
 
-        return category;
+        return null;
+
     }
 
     public ResponseDashbordDTO getCategories(
