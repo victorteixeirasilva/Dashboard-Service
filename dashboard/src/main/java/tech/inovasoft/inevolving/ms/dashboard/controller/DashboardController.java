@@ -67,6 +67,34 @@ public class DashboardController {
         ));
     }
 
+    @Async("asyncExecutor")
+    @GetMapping("/categories/{idUser}/{token}")
+    public CompletableFuture<ResponseEntity<ResponseDashbordDTO>> getCategories(
+            @PathVariable UUID idUser,
+            @PathVariable String token
+    ) throws ExternalServiceErrorException {
+        TokenValidateResponse tokenValidateResponse = null;
+
+        try {
+            tokenValidateResponse = tokenService.validateToken(token);
+            if (tokenValidateResponse == null) {
+                return CompletableFuture.completedFuture(ResponseEntity.status(
+                        HttpStatus.UNAUTHORIZED
+                ).build());
+            }
+        } catch (Exception e) {
+            if (e.getMessage().equals("Invalid token")) {
+                return CompletableFuture.completedFuture(ResponseEntity.status(
+                        HttpStatus.UNAUTHORIZED
+                ).build());
+            }
+        }
+
+        return CompletableFuture.completedFuture(ResponseEntity.ok(
+                dashboardService.getCategories(idUser)
+        ));
+    }
+
     @Operation
     @Async("asyncExecutor")
     @GetMapping("/cancellation-reason/{idUser}/{idObjective}/{token}")

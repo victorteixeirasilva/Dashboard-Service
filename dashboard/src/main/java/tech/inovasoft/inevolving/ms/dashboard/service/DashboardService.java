@@ -233,6 +233,33 @@ public class DashboardService {
         );
     }
 
+    public ResponseDashbordDTO getCategories(
+            UUID idUser
+    ) throws ExternalServiceErrorException {
+        ResponseEntity<CategoriesDTO> responseCategories;
+
+        try {
+            responseCategories = categoryServiceClient
+                    .getCategories(idUser, getValidTokenCategory());
+        } catch (FeignException.Unauthorized e) {
+            cachedTokenCategory = null;
+            return getDashboard(idUser);
+        }
+
+        List<ResponseCategoryDTO> categoryDTOList = new ArrayList<>();
+
+        if (responseCategories.getStatusCode().isSameCodeAs(HttpStatus.OK)) {
+            for (CategoryDTO category : responseCategories.getBody().categories()) {
+                categoryDTOList.add(getResponseCategoryDTO(idUser, category));
+            }
+        }
+
+        return new ResponseDashbordDTO(
+                idUser,
+                categoryDTOList
+        );
+    }
+
     public ResponseDashbordReasonCancellationDTO getDashReasonCancellationByIdObjective(UUID idUser, UUID idObjective) throws ExternalServiceErrorException {
         List<TaskDTO> tasks = getTasksCancelledByObjective(idUser, idObjective);
         List<ReasonDTO> reasonDTOList = new ArrayList<>();
