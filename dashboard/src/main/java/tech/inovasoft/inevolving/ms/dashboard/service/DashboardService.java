@@ -250,7 +250,7 @@ public class DashboardService {
 
         if (responseCategories.getStatusCode().isSameCodeAs(HttpStatus.OK)) {
             for (CategoryDTO category : responseCategories.getBody().categories()) {
-                categoryDTOList.add(getResponseCategoryDTO(idUser, category));
+                categoryDTOList.add(new ResponseCategoryDTO(category.id(), category.categoryName(), category.categoryDescription(), new ArrayList<>()));
             }
         }
 
