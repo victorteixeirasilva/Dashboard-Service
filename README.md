@@ -1,6 +1,7 @@
 # Dashboard Service - Inteligência de Performance para Gestão de Objetivos
 
 **Transformando dados de tarefas em decisões estratégicas, produtividade real e resultados mensuráveis.**
+<img width="1536" height="1024" alt="Generatedimage_1774911582331" src="https://github.com/user-attachments/assets/43fb93b9-168a-4944-9cb8-47ce2d9b876a" />
 
 ## Introdução e Visão Geral
 
