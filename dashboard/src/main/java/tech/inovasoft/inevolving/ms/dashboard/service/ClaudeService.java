@@ -132,7 +132,7 @@ public class ClaudeService {
         json += "]}";
 
         Map<String, Object> body = Map.of(
-                "model", "anthropic/claude-opus-4.1",
+                "model", "qwen/qwen3.6-plus:free",
                 "messages", List.of(
                         Map.of("role", "user", "content", prompt + "\n\n" + json)
                 )
