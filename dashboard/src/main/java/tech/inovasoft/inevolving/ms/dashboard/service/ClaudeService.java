@@ -44,7 +44,7 @@ public class ClaudeService {
                 "Você receberá três objetos JSON:\n" +
                 "\n" +
                 "\n" +
-                "Sua tarefa é analisar esses objetos JSON e fornecer conselhos acionáveis para ajudar o usuário a melhorar seu desempenho e concluir mais tarefas relacionadas ao seu objetivo.\n" +
+                "Sua tarefa é analisar esses objetos JSON e fornecer conselhos acionáveis para ajudar o usuário a melhorar seu desempenho e concluir mais tarefas relacionadas ao seu objetivo. - Não se esqueça de levar a descrição do objetivo em consideração antes de começar o pensamento, pois o usuário pode adicionar informações importantes nela\n" +
                 "\n" +
                 "Siga esses passos:\n" +
                 "\n" +
@@ -132,7 +132,7 @@ public class ClaudeService {
         json += "]}";
 
         Map<String, Object> body = Map.of(
-                "model", "openrouter/free",
+                "model", "openai/gpt-oss-120b:free",
                 "messages", List.of(
                         Map.of("role", "user", "content", prompt + "\n\n" + json)
                 )
