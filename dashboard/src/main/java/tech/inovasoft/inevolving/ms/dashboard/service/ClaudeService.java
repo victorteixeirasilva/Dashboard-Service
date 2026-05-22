@@ -44,7 +44,7 @@ public class ClaudeService {
                 "Você receberá três objetos JSON:\n" +
                 "\n" +
                 "\n" +
-                "Sua tarefa é analisar esses objetos JSON e fornecer conselhos acionáveis para ajudar o usuário a melhorar seu desempenho e concluir mais tarefas relacionadas ao seu objetivo. - Não se esqueça de levar a descrição do objetivo em consideração antes de começar o pensamento, pois o usuário pode adicionar informações importantes nela\n" +
+                "Sua tarefa é analisar esses objetos JSON e fornecer conselhos acionáveis para ajudar o usuário a melhorar seu desempenho e concluir mais tarefas relacionadas ao seu objetivo. - Não se esqueça de levar a descrição do objetivo em consideração antes de começar o pensamento, pois o usuário pode adicionar informações de analises anteriores, para você comparar e ver se ele evolui em algo.\n" +
                 "\n" +
                 "Siga esses passos:\n" +
                 "\n" +
