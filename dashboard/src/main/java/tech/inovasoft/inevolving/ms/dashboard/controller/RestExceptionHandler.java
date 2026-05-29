@@ -33,8 +33,14 @@ public class RestExceptionHandler {
         );
 
         log.error("ERROR: {} - {} - {} - {}",  ex.getMessage(), ex.getClass().getSimpleName(), ex.getLocalizedMessage(), ex.request());
+
+        HttpStatus status = HttpStatus.resolve(ex.status());
+        if (status == null) {
+            status = HttpStatus.INTERNAL_SERVER_ERROR;
+        }
+
         return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .status(status)
                 .body(response);
     }
 

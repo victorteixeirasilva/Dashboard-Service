@@ -33,7 +33,8 @@ public class ClaudeController {
     @PostMapping("/analisar/{token}")
     public ResponseEntity<String> analisar(
         @RequestBody ResponseObjectiveDTO dto,
-        @PathVariable String token
+        @PathVariable String token,
+        @RequestHeader(value = "X-User-Timezone", required = false) String userTimezone
     ) throws ExternalServiceErrorException {
         TokenValidateResponse tokenValidateResponse = null;
 
@@ -52,7 +53,7 @@ public class ClaudeController {
             }
         }
 
-        String resposta = claudeService.enviarParaClaude(dto);
+        String resposta = claudeService.enviarParaClaude(dto, userTimezone);
         return ResponseEntity.ok(resposta);
     }
 }

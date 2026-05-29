@@ -1,6 +1,7 @@
 package tech.inovasoft.inevolving.ms.dashboard.service.client.task.dto;
 
 import java.sql.Date;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 public record TaskDTO(
@@ -16,7 +17,12 @@ public record TaskDTO(
         Boolean hasSubtasks,
         Boolean blockedByObjective,
         Boolean isCopy,
-        String cancellationReason
+        String cancellationReason,
+        UUID idResponsibleUser,
+        OffsetDateTime createdAt,
+        OffsetDateTime inProgressAt,
+        OffsetDateTime completedAt,
+        OffsetDateTime cancelledAt
 ) {
     @Override
     public String toString() {
@@ -29,6 +35,10 @@ public record TaskDTO(
                 ", idObjective=" + idObjective +
                 ", idUser=" + idUser +
                 ", cancellationReason='" + cancellationReason + '\'' +
+                ", createdAt=" + createdAt +
+                ", inProgressAt=" + inProgressAt +
+                ", completedAt=" + completedAt +
+                ", cancelledAt=" + cancelledAt +
                 "},";
     }
 }

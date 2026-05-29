@@ -20,7 +20,6 @@ import tech.inovasoft.inevolving.ms.dashboard.service.client.task.dto.TaskDTO;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 import static tech.inovasoft.inevolving.ms.dashboard.service.client.Auth_For_MService.MicroServices.CATEGORIES_SERVICE;
@@ -55,6 +54,13 @@ public class DashboardService {
         return cachedTokenTask;
     }
 
+    private String resolveUserTimezone(String userTimezone) {
+        if (userTimezone == null || userTimezone.isBlank()) {
+            return null;
+        }
+        return userTimezone;
+    }
+
     /**
      * @desciprion - Analisa as tarefas de um objetivo. | Analyze the tasks of a goal.
      * @param idUser - ID do usuário. | User ID
@@ -63,7 +69,8 @@ public class DashboardService {
      */
     public ObjectiveTaskAnalysisDTO analysisTheObjectiveTasks(
             UUID idUser,
-            UUID idObjective
+            UUID idObjective,
+            String userTimezone
     ) throws ExternalServiceErrorException {
         ResponseEntity<List<TaskDTO>> response;
         try {
@@ -71,11 +78,12 @@ public class DashboardService {
                     .getTasksByObjectiveId(
                             idUser,
                             idObjective,
-                            getValidTokenTask()
+                            getValidTokenTask(),
+                            resolveUserTimezone(userTimezone)
                     );
         } catch (FeignException.Unauthorized e) {
             cachedTokenTask = null;
-            return analysisTheObjectiveTasks(idUser, idObjective);
+            return analysisTheObjectiveTasks(idUser, idObjective, userTimezone);
         } catch (Exception e) {
             return new ObjectiveTaskAnalysisDTO(0,0,0,0,0,0,0,0,0,0,0);
         }
@@ -144,9 +152,10 @@ public class DashboardService {
      */
     public ResponseObjectiveDTO getResponseObjectiveDTO(
             UUID idUser,
-            ObjectiveDTO objectiveDTO
+            ObjectiveDTO objectiveDTO,
+            String userTimezone
     ) throws ExternalServiceErrorException {
-        var analysis = analysisTheObjectiveTasks(idUser, objectiveDTO.id());
+        var analysis = analysisTheObjectiveTasks(idUser, objectiveDTO.id(), userTimezone);
 
         return new ResponseObjectiveDTO(
                 objectiveDTO.id(),
@@ -176,7 +185,8 @@ public class DashboardService {
      */
     public ResponseCategoryDTO getResponseCategoryDTO(
             UUID idUser,
-            CategoryDTO category
+            CategoryDTO category,
+            String userTimezone
     ) throws ExternalServiceErrorException {
         List<ResponseObjectiveDTO> objectives = new ArrayList<>();
 
@@ -186,12 +196,12 @@ public class DashboardService {
                     .getObjectivesByCategory(idUser, category.id(), getValidTokenCategory());
         } catch (FeignException.Unauthorized e) {
             cachedTokenCategory = null;
-            return getResponseCategoryDTO(idUser, category);
+            return getResponseCategoryDTO(idUser, category, userTimezone);
         }
 
         if (objectivesByCategory.getStatusCode().isSameCodeAs(HttpStatus.OK)) {
             for (ObjectiveDTO objective : objectivesByCategory.getBody().objectives()) {
-                objectives.add(getResponseObjectiveDTO(idUser, objective));
+                objectives.add(getResponseObjectiveDTO(idUser, objective, userTimezone));
             }
         }
 
@@ -208,7 +218,8 @@ public class DashboardService {
      * @param idUser - ID do usuário. | User ID
      */
     public ResponseDashbordDTO getDashboard(
-            UUID idUser
+            UUID idUser,
+            String userTimezone
     ) throws ExternalServiceErrorException {
         ResponseEntity<CategoriesDTO> responseCategories;
 
@@ -217,14 +228,14 @@ public class DashboardService {
                     .getCategories(idUser, getValidTokenCategory());
         } catch (FeignException.Unauthorized e) {
             cachedTokenCategory = null;
-            return getDashboard(idUser);
+            return getDashboard(idUser, userTimezone);
         }
 
         List<ResponseCategoryDTO> categoryDTOList = new ArrayList<>();
 
         if (responseCategories.getStatusCode().isSameCodeAs(HttpStatus.OK)) {
                 for (CategoryDTO category : responseCategories.getBody().categories()) {
-                    categoryDTOList.add(getResponseCategoryDTO(idUser, category));
+                    categoryDTOList.add(getResponseCategoryDTO(idUser, category, userTimezone));
                 }
         }
 
@@ -236,7 +247,8 @@ public class DashboardService {
 
     public ResponseCategoryDTO getObjectivesOfCategory(
             UUID idUser,
-            UUID idCategory
+            UUID idCategory,
+            String userTimezone
     ) throws ExternalServiceErrorException {
         ResponseEntity<CategoriesDTO> responseCategories;
 
@@ -245,13 +257,13 @@ public class DashboardService {
                     .getCategories(idUser, getValidTokenCategory());
         } catch (FeignException.Unauthorized e) {
             cachedTokenCategory = null;
-            return getObjectivesOfCategory(idUser, idCategory);
+            return getObjectivesOfCategory(idUser, idCategory, userTimezone);
         }
 
         ResponseCategoryDTO category = null;
         for (CategoryDTO c : responseCategories.getBody().categories()) {
             if (c.id().equals(idCategory)) {
-                category = getResponseCategoryDTO(idUser, c);
+                category = getResponseCategoryDTO(idUser, c, userTimezone);
             }
         }
         return category;
@@ -285,8 +297,12 @@ public class DashboardService {
         );
     }
 
-    public ResponseDashbordReasonCancellationDTO getDashReasonCancellationByIdObjective(UUID idUser, UUID idObjective) throws ExternalServiceErrorException {
-        List<TaskDTO> tasks = getTasksCancelledByObjective(idUser, idObjective);
+    public ResponseDashbordReasonCancellationDTO getDashReasonCancellationByIdObjective(
+            UUID idUser,
+            UUID idObjective,
+            String userTimezone
+    ) throws ExternalServiceErrorException {
+        List<TaskDTO> tasks = getTasksCancelledByObjective(idUser, idObjective, userTimezone);
         List<ReasonDTO> reasonDTOList = new ArrayList<>();
 
         for (TaskDTO task : tasks) {
@@ -317,18 +333,23 @@ public class DashboardService {
         return new ResponseDashbordReasonCancellationDTO(tasks.size(), reasonDTOList);
     }
 
-    public List<TaskDTO> getTasksCancelledByObjective(UUID idUser, UUID idObjective) throws ExternalServiceErrorException {
+    public List<TaskDTO> getTasksCancelledByObjective(
+            UUID idUser,
+            UUID idObjective,
+            String userTimezone
+    ) throws ExternalServiceErrorException {
         ResponseEntity<List<TaskDTO>> response;
         try {
             response = taskServiceClient
                     .getTasksByObjectiveId(
                             idUser,
                             idObjective,
-                            getValidTokenTask()
+                            getValidTokenTask(),
+                            resolveUserTimezone(userTimezone)
                     );
         } catch (FeignException.Unauthorized e) {
             cachedTokenTask = null;
-            return getTasksCancelledByObjective(idUser, idObjective);
+            return getTasksCancelledByObjective(idUser, idObjective, userTimezone);
         } catch (Exception e) {
             throw new ExternalServiceErrorException("task-service");
         }

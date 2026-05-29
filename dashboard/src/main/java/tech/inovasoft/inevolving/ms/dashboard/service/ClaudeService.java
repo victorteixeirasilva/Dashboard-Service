@@ -33,7 +33,7 @@ public class ClaudeService {
     @Value("${inevolving.key.openrouter}")
     private String openRouterKey;
 
-    public String enviarParaClaude(ResponseObjectiveDTO dto) throws ExternalServiceErrorException {
+    public String enviarParaClaude(ResponseObjectiveDTO dto, String userTimezone) throws ExternalServiceErrorException {
         String url = "https://openrouter.ai/api/v1/chat/completions";
 
         HttpHeaders headers = new HttpHeaders();
@@ -91,7 +91,7 @@ public class ClaudeService {
                 " * Leia livros ou artigos sobre gerenciamento de projetos para obter uma melhor compreensão de como planejar e executar tarefas complexas. ";
 
         ResponseDashbordReasonCancellationDTO cancellationDTO =
-                dashboardService.getDashReasonCancellationByIdObjective(dto.idUser(), dto.id());
+                dashboardService.getDashReasonCancellationByIdObjective(dto.idUser(), dto.id(), userTimezone);
 
         String json =
                 "{" +
@@ -123,7 +123,7 @@ public class ClaudeService {
         json += "{" +
                 "Tarefas Canceladas E Seus respectivos motivos: [";
 
-        List<TaskDTO> taskDTOList = dashboardService.getTasksCancelledByObjective(dto.idUser(), dto.id());
+        List<TaskDTO> taskDTOList = dashboardService.getTasksCancelledByObjective(dto.idUser(), dto.id(), userTimezone);
 
         for (TaskDTO taskDTO : taskDTOList) {
             json += taskDTO.toString();

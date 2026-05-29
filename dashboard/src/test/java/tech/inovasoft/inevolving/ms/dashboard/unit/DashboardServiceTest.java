@@ -1,607 +1,371 @@
 package tech.inovasoft.inevolving.ms.dashboard.unit;
 
+import feign.FeignException;
+import feign.Request;
+import feign.RequestTemplate;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import tech.inovasoft.inevolving.ms.dashboard.domain.dto.response.ResponseCategoryDTO;
 import tech.inovasoft.inevolving.ms.dashboard.domain.dto.response.ResponseDashbordDTO;
+import tech.inovasoft.inevolving.ms.dashboard.domain.dto.response.ResponseDashbordReasonCancellationDTO;
 import tech.inovasoft.inevolving.ms.dashboard.domain.dto.response.ResponseObjectiveDTO;
 import tech.inovasoft.inevolving.ms.dashboard.domain.exception.ExternalServiceErrorException;
 import tech.inovasoft.inevolving.ms.dashboard.service.DashboardService;
+import tech.inovasoft.inevolving.ms.dashboard.service.client.Auth_For_MService.TokenCache;
 import tech.inovasoft.inevolving.ms.dashboard.service.client.category.CategoryServiceClient;
 import tech.inovasoft.inevolving.ms.dashboard.service.client.category.dto.*;
 import tech.inovasoft.inevolving.ms.dashboard.service.client.task.TaskServiceClient;
 import tech.inovasoft.inevolving.ms.dashboard.service.client.task.dto.StatusTaskDTO;
 import tech.inovasoft.inevolving.ms.dashboard.service.client.task.dto.TaskDTO;
+import tech.inovasoft.inevolving.ms.dashboard.support.TaskTestDataFactory;
 
-import java.sql.Date;
-import java.time.LocalDate;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+import static tech.inovasoft.inevolving.ms.dashboard.service.client.Auth_For_MService.MicroServices.TASKS_SERVICE;
+import static tech.inovasoft.inevolving.ms.dashboard.support.TaskTestDataFactory.SAMPLE_CANCELLED_AT;
+import static tech.inovasoft.inevolving.ms.dashboard.support.TaskTestDataFactory.SAMPLE_CREATED_AT;
 
 @ExtendWith(MockitoExtension.class)
-public class DashboardServiceTest {
+class DashboardServiceTest {
 
-        @Mock
-        private TaskServiceClient taskServiceClient;
+    private static final String MS_TOKEN = "ms-token";
 
-        @Mock
-        private CategoryServiceClient categoryServiceClient;
+    @Mock
+    private TaskServiceClient taskServiceClient;
 
-        @InjectMocks
-        private DashboardService dashboardService;
+    @Mock
+    private CategoryServiceClient categoryServiceClient;
 
-        UUID idUser = UUID.randomUUID();
+    @Mock
+    private TokenCache tokenCache;
 
-        @Test
-        public void analysisTheObjectiveTasks() throws ExternalServiceErrorException {
-                // Given
-                UUID idObjective = UUID.randomUUID();
-                List<TaskDTO> taskDTOList = new ArrayList<>();
-                for (int i = 1; i <= 5; i++) {
-                        taskDTOList.add(new TaskDTO(
-                                UUID.randomUUID(),
-                                "Task " + i,
-                                "Task " + i + " description",
-                                StatusTaskDTO.TODO,
-                                Date.valueOf(LocalDate.now()),
-                                idObjective,
-                                idUser,
-                                null,
-                                null,
-                                false,
-                                false,
-                                false,
-                                null
-                                )
-                        );
-                }
+    @InjectMocks
+    private DashboardService dashboardService;
 
-                for (int i = 1; i <= 2; i++) {
-                        taskDTOList.add(new TaskDTO(
-                                        UUID.randomUUID(),
-                                        "Task " + i,
-                                        "Task " + i + " description",
-                                        StatusTaskDTO.DONE,
-                                        Date.valueOf(LocalDate.now()),
-                                        idObjective,
-                                        idUser,
-                                        null,
-                                        null,
-                                        false,
-                                        false,
-                                        false,
-                                        null
-                                )
-                        );
-                }
+    private UUID idUser;
+    private UUID idObjective;
 
-                for (int i = 1; i <= 2; i++) {
-                        taskDTOList.add(new TaskDTO(
-                                        UUID.randomUUID(),
-                                        "Task " + i,
-                                        "Task " + i + " description",
-                                        StatusTaskDTO.IN_PROGRESS,
-                                        Date.valueOf(LocalDate.now()),
-                                        idObjective,
-                                        idUser,
-                                        null,
-                                        null,
-                                        false,
-                                        false,
-                                        false,
-                                        null
-                                )
-                        );
-                }
+    @BeforeEach
+    void setUp() {
+        idUser = UUID.randomUUID();
+        idObjective = UUID.randomUUID();
+        lenient().when(tokenCache.getToken(TASKS_SERVICE)).thenReturn(MS_TOKEN);
+    }
 
-                taskDTOList.add(new TaskDTO(
-                                UUID.randomUUID(),
-                                "Task ",
-                                "Task description",
-                                StatusTaskDTO.LATE,
-                                Date.valueOf(LocalDate.now()),
-                                idObjective,
-                                idUser,
-                                null,
-                                null,
-                                false,
-                                false,
-                                false,
-                                null
-                        )
-                );
+    @Test
+    @DisplayName("analysisTheObjectiveTasks deve calcular contagens e percentuais incluindo CANCELLED")
+    void analysisTheObjectiveTasks_mixedStatuses() throws ExternalServiceErrorException {
+        // Given
+        List<TaskDTO> tasks = List.of(
+                TaskTestDataFactory.buildTask(StatusTaskDTO.TODO, idObjective, idUser),
+                TaskTestDataFactory.buildTask(StatusTaskDTO.TODO, idObjective, idUser),
+                TaskTestDataFactory.buildTask(StatusTaskDTO.DONE, idObjective, idUser),
+                TaskTestDataFactory.buildTask(StatusTaskDTO.IN_PROGRESS, idObjective, idUser),
+                TaskTestDataFactory.buildTask(StatusTaskDTO.LATE, idObjective, idUser),
+                TaskTestDataFactory.buildTask(StatusTaskDTO.CANCELLED, idObjective, idUser)
+        );
+        when(taskServiceClient.getTasksByObjectiveId(idUser, idObjective, MS_TOKEN, "America/Sao_Paulo"))
+                .thenReturn(ResponseEntity.ok(tasks));
 
+        // When
+        var result = dashboardService.analysisTheObjectiveTasks(idUser, idObjective, "America/Sao_Paulo");
 
-                // When
-                when(taskServiceClient.getTasksInDateRangeByObjectiveId(
-                        idUser,
-                        idObjective,
-                        Date.valueOf(LocalDate.now().minusYears(1)),
-                        Date.valueOf(LocalDate.now().plusYears(1)),
-                        anyString()
-                )).thenReturn(ResponseEntity.ok(taskDTOList));
-                var result = dashboardService.analysisTheObjectiveTasks(idUser,idObjective);
+        // Then
+        assertThat(result.getTotNumberTasks()).isEqualTo(6);
+        assertThat(result.getNumberTasksToDo()).isEqualTo(2);
+        assertThat(result.getNumberTasksDone()).isEqualTo(1);
+        assertThat(result.getNumberTasksInProgress()).isEqualTo(1);
+        assertThat(result.getNumberTasksOverdue()).isEqualTo(1);
+        assertThat(result.getNumberTaskCancelled()).isEqualTo(1);
+        assertThat(result.getPercentageTasksToDo()).isEqualTo(33);
+        assertThat(result.getPercentageTasksDone()).isEqualTo(17);
+        assertThat(result.getPercentageTasksInProgress()).isEqualTo(17);
+        assertThat(result.getPercentageTasksOverdue()).isEqualTo(17);
+        assertThat(result.getPercentageTaskCancelled()).isEqualTo(17);
+    }
 
-                // Then
-                assertNotNull(result);
-                assertEquals(10, result.getTotNumberTasks());
-                assertEquals(5, result.getNumberTasksToDo());
-                assertEquals(1, result.getNumberTasksOverdue());
-                assertEquals(2, result.getNumberTasksDone());
-                assertEquals(2, result.getNumberTasksInProgress());
-                assertEquals(50, result.getPercentageTasksToDo());
-                assertEquals(10, result.getPercentageTasksOverdue());
-                assertEquals(20, result.getPercentageTasksInProgress());
-                assertEquals(20, result.getPercentageTasksDone());
+    @Test
+    @DisplayName("analysisTheObjectiveTasks deve retornar DTO zerado quando body é null")
+    void analysisTheObjectiveTasks_nullBody() throws ExternalServiceErrorException {
+        // Given
+        when(taskServiceClient.getTasksByObjectiveId(idUser, idObjective, MS_TOKEN, null))
+                .thenReturn(ResponseEntity.ok(null));
 
-                verify(taskServiceClient).getTasksInDateRangeByObjectiveId(
-                        idUser,
-                        idObjective,
-                        Date.valueOf(LocalDate.now().minusYears(1)),
-                        Date.valueOf(LocalDate.now().plusYears(1)),
-                        anyString()
-                );
+        // When
+        var result = dashboardService.analysisTheObjectiveTasks(idUser, idObjective, null);
 
-        }
+        // Then
+        assertThat(result.getTotNumberTasks()).isZero();
+        assertThat(result.getNumberTasksToDo()).isZero();
+    }
 
-        @Test
-        public void getResponseObjectiveDTO() throws ExternalServiceErrorException {
-                // Given
-                var idUser = UUID.randomUUID();
-                UUID idObjective = UUID.randomUUID();
-                var objectiveDTO = new ObjectiveDTO(
-                        idObjective,
-                        "Objective 1",
-                        "Objective 1 description",
-                        StatusObjectiveDTO.TODO,
-                        null,
-                        idUser
-                );
+    @Test
+    @DisplayName("analysisTheObjectiveTasks deve retornar DTO zerado quando Feign lança exceção genérica")
+    void analysisTheObjectiveTasks_genericException() throws ExternalServiceErrorException {
+        // Given
+        when(taskServiceClient.getTasksByObjectiveId(idUser, idObjective, MS_TOKEN, null))
+                .thenThrow(new RuntimeException("feign error"));
 
-                List<TaskDTO> taskDTOList = new ArrayList<>();
-                for (int i = 1; i <= 5; i++) {
-                        taskDTOList.add(new TaskDTO(
-                                        UUID.randomUUID(),
-                                        "Task " + i,
-                                        "Task " + i + " description",
-                                        StatusTaskDTO.TODO,
-                                        Date.valueOf(LocalDate.now()),
-                                        idObjective,
-                                        idUser,
-                                        null,
-                                        null,
-                                        false,
-                                        false,
-                                        false,
-                                        null
-                                )
-                        );
-                }
+        // When
+        var result = dashboardService.analysisTheObjectiveTasks(idUser, idObjective, null);
 
-                for (int i = 1; i <= 2; i++) {
-                        taskDTOList.add(new TaskDTO(
-                                        UUID.randomUUID(),
-                                        "Task " + i,
-                                        "Task " + i + " description",
-                                        StatusTaskDTO.DONE,
-                                        Date.valueOf(LocalDate.now()),
-                                        idObjective,
-                                        idUser,
-                                        null,
-                                        null,
-                                        false,
-                                        false,
-                                        false,
-                                        null
-                                )
-                        );
-                }
+        // Then
+        assertThat(result.getTotNumberTasks()).isZero();
+    }
 
-                for (int i = 1; i <= 2; i++) {
-                        taskDTOList.add(new TaskDTO(
-                                        UUID.randomUUID(),
-                                        "Task " + i,
-                                        "Task " + i + " description",
-                                        StatusTaskDTO.IN_PROGRESS,
-                                        Date.valueOf(LocalDate.now()),
-                                        idObjective,
-                                        idUser,
-                                        null,
-                                        null,
-                                        false,
-                                        false,
-                                        false,
-                                        null
-                                )
-                        );
-                }
+    @Test
+    @DisplayName("analysisTheObjectiveTasks deve refazer chamada após Unauthorized com mesmo timezone")
+    void analysisTheObjectiveTasks_unauthorizedRetry() throws ExternalServiceErrorException {
+        // Given
+        FeignException.Unauthorized unauthorized = unauthorizedException();
+        when(taskServiceClient.getTasksByObjectiveId(idUser, idObjective, MS_TOKEN, "Europe/Lisbon"))
+                .thenThrow(unauthorized)
+                .thenReturn(ResponseEntity.ok(List.of(
+                        TaskTestDataFactory.buildTask(StatusTaskDTO.TODO, idObjective, idUser)
+                )));
 
-                taskDTOList.add(new TaskDTO(
-                                UUID.randomUUID(),
-                                "Task ",
-                                "Task description",
-                                StatusTaskDTO.LATE,
-                                Date.valueOf(LocalDate.now()),
-                                idObjective,
-                                idUser,
-                                null,
-                                null,
-                                false,
-                                false,
-                                false,
-                                null
-                        )
-                );
+        // When
+        var result = dashboardService.analysisTheObjectiveTasks(idUser, idObjective, "Europe/Lisbon");
 
-                ResponseObjectiveDTO expectedResponseObjectiveDTO = new ResponseObjectiveDTO(
-                        objectiveDTO.id(),
-                        objectiveDTO.nameObjective(),
-                        objectiveDTO.descriptionObjective(),
-                        objectiveDTO.statusObjective(),
-                        objectiveDTO.completionDate(),
-                        objectiveDTO.idUser(),
-                        10,
-                        5,
-                        2,
-                        2,
-                        1,
-                        50,
-                        20,
-                        20,
-                        10,
-                        0,
-                        0
-                );
+        // Then
+        assertThat(result.getTotNumberTasks()).isEqualTo(1);
+        verify(taskServiceClient, times(2))
+                .getTasksByObjectiveId(idUser, idObjective, MS_TOKEN, "Europe/Lisbon");
+        verify(tokenCache, times(2)).getToken(TASKS_SERVICE);
+    }
 
+    @Test
+    @DisplayName("analysisTheObjectiveTasks deve repassar timezone válido ao Feign")
+    void analysisTheObjectiveTasks_passesValidTimezone() throws ExternalServiceErrorException {
+        // Given
+        when(taskServiceClient.getTasksByObjectiveId(idUser, idObjective, MS_TOKEN, "America/Sao_Paulo"))
+                .thenReturn(ResponseEntity.ok(List.of()));
 
-                // When
-                when(taskServiceClient.getTasksInDateRangeByObjectiveId(
-                        idUser,
-                        idObjective,
-                        Date.valueOf(LocalDate.now().minusYears(1)),
-                        Date.valueOf(LocalDate.now().plusYears(1)),
-                        anyString()
-                )).thenReturn(ResponseEntity.ok(taskDTOList));
-                var result = dashboardService.getResponseObjectiveDTO(idUser, objectiveDTO);
+        // When
+        dashboardService.analysisTheObjectiveTasks(idUser, idObjective, "America/Sao_Paulo");
 
-                // Then
-                assertNotNull(result);
-                assertEquals(expectedResponseObjectiveDTO.id(), result.id());
-                assertEquals(expectedResponseObjectiveDTO.nameObjective(), result.nameObjective());
-                assertEquals(expectedResponseObjectiveDTO.descriptionObjective(), result.descriptionObjective());
-                assertEquals(expectedResponseObjectiveDTO.statusObjective(), result.statusObjective());
-                assertEquals(expectedResponseObjectiveDTO.completionDate(), result.completionDate());
-                assertEquals(10, result.totNumberTasks());
-                assertEquals(5, result.numberTasksToDo());
-                assertEquals(1, result.numberTasksOverdue());
-                assertEquals(2, result.numberTasksDone());
-                assertEquals(2, result.numberTasksInProgress());
-                assertEquals(50, result.percentageTasksToDo());
-                assertEquals(10, result.percentageTasksOverdue());
-                assertEquals(20, result.percentageTasksInProgress());
-                assertEquals(20, result.percentageTasksDone());
-        }
+        // Then
+        verify(taskServiceClient).getTasksByObjectiveId(idUser, idObjective, MS_TOKEN, "America/Sao_Paulo");
+    }
 
-        @Test
-        public void getResponseCategoryDTO() throws ExternalServiceErrorException {
-                // Given
-                CategoryDTO category = new CategoryDTO(
-                        UUID.randomUUID(),
-                        "Category 1",
-                        "Category 1 description"
-                );
+    @Test
+    @DisplayName("analysisTheObjectiveTasks deve enviar null ao Feign quando timezone é blank")
+    void analysisTheObjectiveTasks_blankTimezoneBecomesNull() throws ExternalServiceErrorException {
+        // Given
+        when(taskServiceClient.getTasksByObjectiveId(idUser, idObjective, MS_TOKEN, null))
+                .thenReturn(ResponseEntity.ok(List.of()));
 
-                List<ResponseObjectiveDTO> objectives = new ArrayList<>();
-                ResponseObjectiveDTO responseObjectiveDTO = new ResponseObjectiveDTO(
-                        UUID.randomUUID(),
-                        "Objective 1",
-                        "Objective 1 description",
-                        StatusObjectiveDTO.TODO,
-                        null,
-                        idUser,
-                        10,
-                        5,
-                        2,
-                        2,
-                        1,
-                        50,
-                        20,
-                        20,
-                        10,
-                        0,
-                        0
-                );
-                objectives.add(responseObjectiveDTO);
+        // When
+        dashboardService.analysisTheObjectiveTasks(idUser, idObjective, "   ");
 
-                ResponseCategoryDTO expectedResponseCategoryDTO = new ResponseCategoryDTO(
-                        category.id(),
-                        category.categoryName(),
-                        category.categoryDescription(),
-                        objectives
-                );
+        // Then
+        ArgumentCaptor<String> timezoneCaptor = ArgumentCaptor.forClass(String.class);
+        verify(taskServiceClient).getTasksByObjectiveId(
+                eq(idUser), eq(idObjective), eq(MS_TOKEN), timezoneCaptor.capture()
+        );
+        assertThat(timezoneCaptor.getValue()).isNull();
+    }
 
-                // When
-                when(categoryServiceClient.getObjectivesByCategory(idUser, category.id(), anyString()))
-                        .thenReturn(ResponseEntity.ok(new ObjectivesByCategoryDTO(category, List.of(new ObjectiveDTO(
-                                responseObjectiveDTO.id(),
-                                responseObjectiveDTO.nameObjective(),
-                                responseObjectiveDTO.descriptionObjective(),
-                                responseObjectiveDTO.statusObjective(),
-                                responseObjectiveDTO.completionDate(),
-                                responseObjectiveDTO.idUser()
-                        )))));
-                List<TaskDTO> taskDTOList = new ArrayList<>();
-                for (int i = 1; i <= 5; i++) {
-                        taskDTOList.add(new TaskDTO(
-                                        UUID.randomUUID(),
-                                        "Task " + i,
-                                        "Task " + i + " description",
-                                        StatusTaskDTO.TODO,
-                                        Date.valueOf(LocalDate.now()),
-                                        responseObjectiveDTO.id(),
-                                        idUser,
-                                        null,
-                                        null,
-                                        false,
-                                        false,
-                                        false,
-                                        null
-                                )
-                        );
-                }
+    @Test
+    @DisplayName("getTasksCancelledByObjective deve retornar apenas tarefas CANCELLED com timestamps")
+    void getTasksCancelledByObjective_filtersCancelled() throws ExternalServiceErrorException {
+        // Given
+        TaskDTO cancelled = TaskTestDataFactory.buildCancelledTask(idObjective, idUser, "Imprevisto");
+        List<TaskDTO> tasks = List.of(
+                TaskTestDataFactory.buildTask(StatusTaskDTO.TODO, idObjective, idUser),
+                cancelled
+        );
+        when(taskServiceClient.getTasksByObjectiveId(idUser, idObjective, MS_TOKEN, "America/Sao_Paulo"))
+                .thenReturn(ResponseEntity.ok(tasks));
 
-                for (int i = 1; i <= 2; i++) {
-                        taskDTOList.add(new TaskDTO(
-                                        UUID.randomUUID(),
-                                        "Task " + i,
-                                        "Task " + i + " description",
-                                        StatusTaskDTO.DONE,
-                                        Date.valueOf(LocalDate.now()),
-                                        responseObjectiveDTO.id(),
-                                        idUser,
-                                        null,
-                                        null,
-                                        false,
-                                        false,
-                                        false,
-                                        null
-                                )
-                        );
-                }
+        // When
+        List<TaskDTO> result = dashboardService.getTasksCancelledByObjective(
+                idUser, idObjective, "America/Sao_Paulo"
+        );
 
-                for (int i = 1; i <= 2; i++) {
-                        taskDTOList.add(new TaskDTO(
-                                        UUID.randomUUID(),
-                                        "Task " + i,
-                                        "Task " + i + " description",
-                                        StatusTaskDTO.IN_PROGRESS,
-                                        Date.valueOf(LocalDate.now()),
-                                        responseObjectiveDTO.id(),
-                                        idUser,
-                                        null,
-                                        null,
-                                        false,
-                                        false,
-                                        false,
-                                        null
-                                )
-                        );
-                }
+        // Then
+        assertThat(result).hasSize(1);
+        assertThat(result.getFirst().status()).isEqualTo(StatusTaskDTO.CANCELLED);
+        assertThat(result.getFirst().createdAt()).isEqualTo(SAMPLE_CREATED_AT);
+        assertThat(result.getFirst().cancelledAt()).isEqualTo(SAMPLE_CANCELLED_AT);
+    }
 
-                taskDTOList.add(new TaskDTO(
-                                UUID.randomUUID(),
-                                "Task ",
-                                "Task description",
-                                StatusTaskDTO.LATE,
-                                Date.valueOf(LocalDate.now()),
-                                responseObjectiveDTO.id(),
-                                idUser,
-                                null,
-                                null,
-                                false,
-                                false,
-                                false,
-                                null
-                        )
-                );
+    @Test
+    @DisplayName("getTasksCancelledByObjective deve retornar lista vazia quando body é null ou vazio")
+    void getTasksCancelledByObjective_emptyOrNull() throws ExternalServiceErrorException {
+        // Given
+        when(taskServiceClient.getTasksByObjectiveId(idUser, idObjective, MS_TOKEN, null))
+                .thenReturn(ResponseEntity.ok(null));
 
+        // When
+        List<TaskDTO> result = dashboardService.getTasksCancelledByObjective(idUser, idObjective, null);
 
-                // When
-                when(taskServiceClient.getTasksInDateRangeByObjectiveId(
-                        idUser,
-                        responseObjectiveDTO.id(),
-                        Date.valueOf(LocalDate.now().minusYears(1)),
-                        Date.valueOf(LocalDate.now().plusYears(1)),
-                        anyString()
-                )).thenReturn(ResponseEntity.ok(taskDTOList));
-                var result = dashboardService.getResponseCategoryDTO(idUser,category);
+        // Then
+        assertThat(result).isEmpty();
 
-                // Then
-                assertNotNull(result);
-                assertEquals(expectedResponseCategoryDTO.id(), result.id());
-                assertEquals(expectedResponseCategoryDTO.categoryName(), result.categoryName());
-                assertEquals(expectedResponseCategoryDTO.categoryDescription(), result.categoryDescription());
-                assertEquals(expectedResponseCategoryDTO.objectives(), result.objectives());
-        }
+        when(taskServiceClient.getTasksByObjectiveId(idUser, idObjective, MS_TOKEN, null))
+                .thenReturn(ResponseEntity.ok(Collections.emptyList()));
+        assertThat(dashboardService.getTasksCancelledByObjective(idUser, idObjective, null)).isEmpty();
+    }
 
-        @Test
-        public void getDashboard() throws ExternalServiceErrorException {
-                // Given
-                UUID idUser = UUID.randomUUID();
+    @Test
+    @DisplayName("getTasksCancelledByObjective deve lançar ExternalServiceErrorException em erro genérico")
+    void getTasksCancelledByObjective_genericException() {
+        // Given
+        when(taskServiceClient.getTasksByObjectiveId(idUser, idObjective, MS_TOKEN, null))
+                .thenThrow(new RuntimeException("connection failed"));
 
-                List<ResponseCategoryDTO> categoryDTOList = new ArrayList<>();
-                List<ResponseObjectiveDTO> objectives = new ArrayList<>();
+        // When / Then
+        assertThatThrownBy(() -> dashboardService.getTasksCancelledByObjective(idUser, idObjective, null))
+                .isInstanceOf(ExternalServiceErrorException.class)
+                .hasMessageContaining("task-service");
+    }
 
-                ResponseObjectiveDTO responseObjectiveDTO = new ResponseObjectiveDTO(
-                        UUID.randomUUID(),
-                        "Objective 1",
-                        "Objective 1 description",
-                        StatusObjectiveDTO.TODO,
-                        null,
-                        idUser,
-                        10,
-                        5,
-                        2,
-                        2,
-                        1,
-                        50,
-                        20,
-                        20,
-                        10,
-                        0,
-                        0
-                );
-                objectives.add(responseObjectiveDTO);
+    @Test
+    @DisplayName("getTasksCancelledByObjective deve refazer chamada após Unauthorized")
+    void getTasksCancelledByObjective_unauthorizedRetry() throws ExternalServiceErrorException {
+        // Given
+        FeignException.Unauthorized unauthorized = unauthorizedException();
+        when(taskServiceClient.getTasksByObjectiveId(idUser, idObjective, MS_TOKEN, null))
+                .thenThrow(unauthorized)
+                .thenReturn(ResponseEntity.ok(List.of(
+                        TaskTestDataFactory.buildCancelledTask(idObjective, idUser, "Acabou")
+                )));
 
-                ResponseCategoryDTO responseCategoryDTO = new ResponseCategoryDTO(
-                        UUID.randomUUID(),
-                        "Category 1",
-                        "Category 1 description",
-                        objectives
-                );
-                categoryDTOList.add(responseCategoryDTO);
+        // When
+        List<TaskDTO> result = dashboardService.getTasksCancelledByObjective(idUser, idObjective, null);
 
+        // Then
+        assertThat(result).hasSize(1);
+        verify(taskServiceClient, times(2))
+                .getTasksByObjectiveId(idUser, idObjective, MS_TOKEN, null);
+    }
 
-                ResponseDashbordDTO expectedResponseDashbordDTO = new ResponseDashbordDTO(
-                        idUser,
-                        categoryDTOList
-                );
+    @Test
+    @DisplayName("getDashReasonCancellationByIdObjective deve agregar motivos separados por ponto e vírgula")
+    void getDashReasonCancellationByIdObjective_aggregatesReasons() throws ExternalServiceErrorException {
+        // Given
+        List<TaskDTO> tasks = List.of(
+                TaskTestDataFactory.buildCancelledTask(idObjective, idUser, "Imprevisto; Acabou"),
+                TaskTestDataFactory.buildCancelledTask(idObjective, idUser, "Imprevisto"),
+                TaskTestDataFactory.buildCancelledTask(idObjective, idUser, "acabou")
+        );
+        when(taskServiceClient.getTasksByObjectiveId(idUser, idObjective, MS_TOKEN, "UTC"))
+                .thenReturn(ResponseEntity.ok(tasks));
 
-                List<CategoryDTO> categories = new ArrayList<>();
-                CategoryDTO categoryDTO = new CategoryDTO(
-                        responseCategoryDTO.id(),
-                        responseCategoryDTO.categoryName(),
-                        responseCategoryDTO.categoryDescription()
-                );
-                categories.add(categoryDTO);
+        // When
+        ResponseDashbordReasonCancellationDTO result =
+                dashboardService.getDashReasonCancellationByIdObjective(idUser, idObjective, "UTC");
 
-                CategoriesDTO categoriesDTO = new CategoriesDTO(idUser, categories);
+        // Then
+        assertThat(result.totNumberTasks()).isEqualTo(3);
+        assertThat(result.reasonList()).hasSize(2);
+        assertThat(result.reasonList().stream().filter(r -> r.getReason().equalsIgnoreCase("Imprevisto")).findFirst())
+                .isPresent()
+                .get()
+                .satisfies(r -> assertThat(r.getAmount()).isEqualTo(2));
+        assertThat(result.reasonList().stream().filter(r -> r.getReason().equalsIgnoreCase("Acabou")).findFirst())
+                .isPresent()
+                .get()
+                .satisfies(r -> assertThat(r.getAmount()).isEqualTo(2));
+    }
 
-                List<ObjectiveDTO> objectivesByCategory = new ArrayList<>();
-                ObjectiveDTO objectiveDTO = new ObjectiveDTO(
-                        responseObjectiveDTO.id(),
-                        responseObjectiveDTO.nameObjective(),
-                        responseObjectiveDTO.descriptionObjective(),
-                        responseObjectiveDTO.statusObjective(),
-                        responseObjectiveDTO.completionDate(),
-                        responseObjectiveDTO.idUser()
-                );
-                objectivesByCategory.add(objectiveDTO);
+    @Test
+    @DisplayName("getResponseObjectiveDTO deve repassar timezone ao Feign")
+    void getResponseObjectiveDTO_propagatesTimezone() throws ExternalServiceErrorException {
+        // Given
+        ObjectiveDTO objective = new ObjectiveDTO(
+                idObjective, "Obj", "Desc", StatusObjectiveDTO.TODO, null, idUser
+        );
+        when(taskServiceClient.getTasksByObjectiveId(idUser, idObjective, MS_TOKEN, "Europe/Lisbon"))
+                .thenReturn(ResponseEntity.ok(List.of(
+                        TaskTestDataFactory.buildTask(StatusTaskDTO.TODO, idObjective, idUser)
+                )));
 
-                ObjectivesByCategoryDTO objectivesByCategoryDTO = new ObjectivesByCategoryDTO(
-                        categoryDTO,
-                        objectivesByCategory
-                );
+        // When
+        ResponseObjectiveDTO result = dashboardService.getResponseObjectiveDTO(idUser, objective, "Europe/Lisbon");
 
-                // When
-                List<TaskDTO> taskDTOList = new ArrayList<>();
-                for (int i = 1; i <= 5; i++) {
-                        taskDTOList.add(new TaskDTO(
-                                        UUID.randomUUID(),
-                                        "Task " + i,
-                                        "Task " + i + " description",
-                                        StatusTaskDTO.TODO,
-                                        Date.valueOf(LocalDate.now()),
-                                        responseObjectiveDTO.id(),
-                                        idUser,
-                                        null,
-                                        null,
-                                        false,
-                                        false,
-                                        false,
-                                        null
-                                )
-                        );
-                }
+        // Then
+        assertThat(result.totNumberTasks()).isEqualTo(1);
+        verify(taskServiceClient).getTasksByObjectiveId(idUser, idObjective, MS_TOKEN, "Europe/Lisbon");
+    }
 
-                for (int i = 1; i <= 2; i++) {
-                        taskDTOList.add(new TaskDTO(
-                                        UUID.randomUUID(),
-                                        "Task " + i,
-                                        "Task " + i + " description",
-                                        StatusTaskDTO.DONE,
-                                        Date.valueOf(LocalDate.now()),
-                                        responseObjectiveDTO.id(),
-                                        idUser,
-                                        null,
-                                        null,
-                                        false,
-                                        false,
-                                        false,
-                                        null
-                                )
-                        );
-                }
+    @Test
+    @DisplayName("getResponseCategoryDTO deve repassar timezone ao Feign")
+    void getResponseCategoryDTO_propagatesTimezone() throws ExternalServiceErrorException {
+        // Given
+        CategoryDTO category = new CategoryDTO(UUID.randomUUID(), "Cat", "Desc");
+        ObjectiveDTO objective = new ObjectiveDTO(
+                idObjective, "Obj", "Desc", StatusObjectiveDTO.TODO, null, idUser
+        );
+        when(categoryServiceClient.getObjectivesByCategory(eq(idUser), eq(category.id()), anyString()))
+                .thenReturn(ResponseEntity.ok(new ObjectivesByCategoryDTO(category, List.of(objective))));
+        when(tokenCache.getToken(any())).thenReturn(MS_TOKEN);
+        when(taskServiceClient.getTasksByObjectiveId(idUser, idObjective, MS_TOKEN, "America/Sao_Paulo"))
+                .thenReturn(ResponseEntity.ok(List.of(
+                        TaskTestDataFactory.buildTask(StatusTaskDTO.DONE, idObjective, idUser)
+                )));
 
-                for (int i = 1; i <= 2; i++) {
-                        taskDTOList.add(new TaskDTO(
-                                        UUID.randomUUID(),
-                                        "Task " + i,
-                                        "Task " + i + " description",
-                                        StatusTaskDTO.IN_PROGRESS,
-                                        Date.valueOf(LocalDate.now()),
-                                        responseObjectiveDTO.id(),
-                                        idUser,
-                                        null,
-                                        null,
-                                        false,
-                                        false,
-                                        false,
-                                        null
-                                )
-                        );
-                }
+        // When
+        ResponseCategoryDTO result = dashboardService.getResponseCategoryDTO(
+                idUser, category, "America/Sao_Paulo"
+        );
 
-                taskDTOList.add(new TaskDTO(
-                                UUID.randomUUID(),
-                                "Task ",
-                                "Task description",
-                                StatusTaskDTO.LATE,
-                                Date.valueOf(LocalDate.now()),
-                                responseObjectiveDTO.id(),
-                                idUser,
-                                null,
-                                null,
-                                false,
-                                false,
-                                false,
-                                null
-                        )
-                );
+        // Then
+        assertThat(result.objectives()).hasSize(1);
+        assertThat(result.objectives().getFirst().numberTasksDone()).isEqualTo(1);
+        verify(taskServiceClient).getTasksByObjectiveId(idUser, idObjective, MS_TOKEN, "America/Sao_Paulo");
+    }
 
+    @Test
+    @DisplayName("getDashboard deve repassar timezone ao Feign para cada objetivo")
+    void getDashboard_propagatesTimezone() throws ExternalServiceErrorException {
+        // Given
+        UUID categoryId = UUID.randomUUID();
+        CategoryDTO category = new CategoryDTO(categoryId, "Cat", "Desc");
+        ObjectiveDTO objective = new ObjectiveDTO(
+                idObjective, "Obj", "Desc", StatusObjectiveDTO.TODO, null, idUser
+        );
+        when(categoryServiceClient.getCategories(eq(idUser), anyString()))
+                .thenReturn(ResponseEntity.ok(new CategoriesDTO(idUser, List.of(category))));
+        when(categoryServiceClient.getObjectivesByCategory(eq(idUser), eq(categoryId), anyString()))
+                .thenReturn(ResponseEntity.ok(new ObjectivesByCategoryDTO(category, List.of(objective))));
+        when(tokenCache.getToken(any())).thenReturn(MS_TOKEN);
+        when(taskServiceClient.getTasksByObjectiveId(idUser, idObjective, MS_TOKEN, "America/Sao_Paulo"))
+                .thenReturn(ResponseEntity.ok(new ArrayList<>()));
 
-                // When
-                when(taskServiceClient.getTasksInDateRangeByObjectiveId(
-                        idUser,
-                        responseObjectiveDTO.id(),
-                        Date.valueOf(LocalDate.now().minusYears(1)),
-                        Date.valueOf(LocalDate.now().plusYears(1)),
-                        anyString()
-                )).thenReturn(ResponseEntity.ok(taskDTOList));
-                when(categoryServiceClient.getCategories(idUser, anyString()))
-                        .thenReturn(ResponseEntity.ok(categoriesDTO));
-                when(categoryServiceClient.getObjectivesByCategory(idUser, responseCategoryDTO.id(), anyString()))
-                        .thenReturn(ResponseEntity.ok(objectivesByCategoryDTO));
-                var result = dashboardService.getDashboard(idUser);
+        // When
+        ResponseDashbordDTO result = dashboardService.getDashboard(idUser, "America/Sao_Paulo");
 
-                // Then
-                assertNotNull(result);
-                assertEquals(expectedResponseDashbordDTO.idUser(), result.idUser());
-                assertEquals(expectedResponseDashbordDTO.categoryDTOList(), result.categoryDTOList());
-        }
+        // Then
+        assertThat(result.categoryDTOList()).hasSize(1);
+        verify(taskServiceClient).getTasksByObjectiveId(idUser, idObjective, MS_TOKEN, "America/Sao_Paulo");
+    }
 
-
-
+    private FeignException.Unauthorized unauthorizedException() {
+        Request request = Request.create(
+                Request.HttpMethod.GET,
+                "/ms/tasks/objective",
+                Collections.emptyMap(),
+                null,
+                StandardCharsets.UTF_8,
+                new RequestTemplate()
+        );
+        return new FeignException.Unauthorized("Unauthorized", request, null, null);
+    }
 }

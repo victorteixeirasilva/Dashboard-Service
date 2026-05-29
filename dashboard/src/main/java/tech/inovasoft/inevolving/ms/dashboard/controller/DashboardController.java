@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import tech.inovasoft.inevolving.ms.dashboard.domain.dto.response.ResponseCategoryDTO;
@@ -44,7 +45,8 @@ public class DashboardController {
     @GetMapping("/{idUser}/{token}")
     public CompletableFuture<ResponseEntity<ResponseDashbordDTO>> getDashboard(
             @PathVariable UUID idUser,
-            @PathVariable String token
+            @PathVariable String token,
+            @RequestHeader(value = "X-User-Timezone", required = false) String userTimezone
     ) throws ExternalServiceErrorException {
         TokenValidateResponse tokenValidateResponse = null;
 
@@ -64,7 +66,7 @@ public class DashboardController {
         }
 
         return CompletableFuture.completedFuture(ResponseEntity.ok(
-                dashboardService.getDashboard(idUser)
+                dashboardService.getDashboard(idUser, userTimezone)
         ));
     }
 
@@ -101,7 +103,8 @@ public class DashboardController {
     public CompletableFuture<ResponseEntity<ResponseCategoryDTO>> getObjectivesOfCategory(
             @PathVariable UUID idUser,
             @PathVariable UUID idCategory,
-            @PathVariable String token
+            @PathVariable String token,
+            @RequestHeader(value = "X-User-Timezone", required = false) String userTimezone
     ) throws ExternalServiceErrorException {
         TokenValidateResponse tokenValidateResponse = null;
 
@@ -121,7 +124,7 @@ public class DashboardController {
         }
 
         return CompletableFuture.completedFuture(ResponseEntity.ok(
-                dashboardService.getObjectivesOfCategory(idUser, idCategory)
+                dashboardService.getObjectivesOfCategory(idUser, idCategory, userTimezone)
         ));
     }
 
@@ -131,7 +134,8 @@ public class DashboardController {
     public CompletableFuture<ResponseEntity<ResponseDashbordReasonCancellationDTO>> getDashReasonCancellationByIdObjective(
             @PathVariable UUID idUser,
             @PathVariable UUID idObjective,
-            @PathVariable String token
+            @PathVariable String token,
+            @RequestHeader(value = "X-User-Timezone", required = false) String userTimezone
     ) throws ExternalServiceErrorException {
         TokenValidateResponse tokenValidateResponse = null;
 
@@ -151,7 +155,7 @@ public class DashboardController {
         }
 
         return CompletableFuture.completedFuture(ResponseEntity.ok(
-                dashboardService.getDashReasonCancellationByIdObjective(idUser, idObjective)
+                dashboardService.getDashReasonCancellationByIdObjective(idUser, idObjective, userTimezone)
         ));
     }
 
@@ -161,7 +165,8 @@ public class DashboardController {
     public CompletableFuture<ResponseEntity<List<TaskDTO>>> getTaksReasonCancellationByIdObjective(
             @PathVariable UUID idUser,
             @PathVariable UUID idObjective,
-            @PathVariable String token
+            @PathVariable String token,
+            @RequestHeader(value = "X-User-Timezone", required = false) String userTimezone
     ) throws ExternalServiceErrorException {
         TokenValidateResponse tokenValidateResponse = null;
 
@@ -181,7 +186,7 @@ public class DashboardController {
         }
 
         return CompletableFuture.completedFuture(ResponseEntity.ok(
-                dashboardService.getTasksCancelledByObjective(idUser, idObjective)
+                dashboardService.getTasksCancelledByObjective(idUser, idObjective, userTimezone)
         ));
     }
 
